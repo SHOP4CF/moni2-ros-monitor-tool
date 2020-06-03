@@ -8,6 +8,7 @@
   <license>No license</license>
 
   <depend>rclpy</depend>
+  <depend>python3-qt5-bindings</depend>
 
   <test_depend>ament_flake8</test_depend>
   <test_depend>ament_pep257</test_depend>
