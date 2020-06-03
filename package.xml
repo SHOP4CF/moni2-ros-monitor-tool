@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>moni2</name>
+  <version>0.0.0</version>
+  <description>Monitor a collection of ROS2 nodes.</description>
+  <maintainer email="rlh@teknologisk.dk">rlh</maintainer>
+  <license>No license</license>
+
+  <depend>rclpy</depend>
+
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
