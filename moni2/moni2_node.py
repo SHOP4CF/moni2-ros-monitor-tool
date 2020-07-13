@@ -4,6 +4,7 @@ from rclpy.node import Node
 from PyQt5.QtWidgets import QApplication
 from moni2.gui import MonitorWindow
 from std_srvs.srv import SetBool
+from rcl_interfaces.msg import Log
 
 
 class Moni2Node(Node):
@@ -14,6 +15,7 @@ class Moni2Node(Node):
 
         self.window = window
         self.text_service = self.create_service(SetBool, 'set_bool', self.set_bool_callback)
+        self.log_sub = self.create_subscription(Log, '/rosout', self.received_log, 10)
 
         self.get_logger().info(f"{self.get_name()} Initialized!")
 
@@ -21,6 +23,9 @@ class Moni2Node(Node):
         text = "Soo true!" if request.data else "Soo false!"
         self.window.set_text(text)
         return response
+
+    def received_log(self, log: Log):
+        self.window.received_log(log)
 
 
 def main(args=None):
