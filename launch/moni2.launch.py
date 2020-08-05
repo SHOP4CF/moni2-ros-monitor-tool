@@ -15,7 +15,7 @@ def generate_launch_description():
     """
     moni2_node = Node(
         package='moni2',
-        node_executable='moni2',
+        executable='moni2',
         output='screen',
         emulate_tty=True,
         parameters=[{}]
