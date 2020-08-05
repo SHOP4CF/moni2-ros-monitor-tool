@@ -3,7 +3,7 @@ a ROS2/Python3/Qt5 monitoring tool
 
 ## Requirements
 * Python >= 3.6
-* ROS2
+* ROS2 foxy
 * PyQt5
 
 ## Build
