@@ -10,9 +10,8 @@ from PyQt5.QtWidgets import (
     QListWidget,
     QAction,
     QMenu,
-    QActionGroup
 )
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import Qt
 
 from rcl_interfaces.msg import Log
@@ -40,6 +39,7 @@ class MonitorWindow(QMainWindow):
         self.init_components()
         self.init_ui()
         self.init_menu()
+        self.message("Initialized")
 
     def init_components(self):
         self.log_widget = LogWidget(self.log.get_child("LogWidget"), self)
@@ -74,8 +74,7 @@ class MonitorWindow(QMainWindow):
         file_menu.addSeparator()
         self._add_menu_action(file_menu, "Settings", callback=lambda: self.message("TODO"))
         file_menu.addSeparator()
-        self._add_menu_action(file_menu, "&Quit", self.close_application,
-                              "Exit the application", "Ctrl+Q")
+        self._add_menu_action(file_menu, "&Quit", self.close_application, "Exit the application", "Ctrl+Q")
 
         views_menu = main_menu.addMenu("&Views")
         views_menu.addAction(self.log_widget.toggleViewAction())
@@ -86,10 +85,8 @@ class MonitorWindow(QMainWindow):
     def log_widget_visible(self, visible: bool):
         self.log.info(f"Log widget visible: {visible}")
 
-
     @staticmethod
-    def _add_menu_action(menu: QMenu, name: str, callback: Callable,
-                         status_tip="", shortcut="") -> QAction:
+    def _add_menu_action(menu: QMenu, name: str, callback: Callable, status_tip="", shortcut="") -> QAction:
         action = QAction(name, menu)
         if shortcut:
             action.setShortcut(shortcut)
@@ -107,8 +104,7 @@ class MonitorWindow(QMainWindow):
 
     @pyqtSlot(str, str)
     def message(self, message: str, message_type='info'):
-        assert message_type in self.STATUSBAR_MESSAGE_TYPE, \
-            f"message_type is: {message_type}, " \
+        assert message_type in self.STATUSBAR_MESSAGE_TYPE, f"message_type is: {message_type}, " \
             f"should be one of the following: {list(self.STATUSBAR_MESSAGE_TYPE.keys())}"
 
         background_color, text_color = self.STATUSBAR_MESSAGE_TYPE[message_type]
