@@ -14,7 +14,11 @@ from PyQt5.QtCore import pyqtSlot, Qt
 
 
 class LogWidget(QDockWidget):
-    LOG_LABEL = {10: "DEBUG", 20: "INFO ", 30: "WARN ", 40: "ERROR", 50: "FATAL"}
+    LOG_LABEL = {logging.DEBUG: "DEBUG",
+                 logging.INFO: "INFO ",
+                 logging.WARNING: "WARN ",
+                 logging.ERROR: "ERROR",
+                 logging.FATAL: "FATAL"}
 
     def __init__(self, log: logging.Logger, parent: Optional[QWidget] = None):
         super().__init__("Log widget", parent)
@@ -41,7 +45,6 @@ class LogWidget(QDockWidget):
         self.log_list.insertItem(0, f'[{self.LOG_LABEL[log.level]}] [{log.name}]: {log.msg}')
 
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
-        self.log.info("contextMenuEvent!")
         menu = QMenu(self)
         group = QActionGroup(self)
         group.setExclusive(True)
@@ -55,4 +58,5 @@ class LogWidget(QDockWidget):
                 action.setChecked(True)
             menu.addAction(action)
         action = menu.exec(event.globalPos())
-        self.log_level = action.data()
+        if action:
+            self.log_level = action.data()
