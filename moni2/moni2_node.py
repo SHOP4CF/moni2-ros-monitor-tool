@@ -9,11 +9,11 @@ from rcl_interfaces.msg import Log
 
 class Moni2Node(Node):
 
-    def __init__(self, window):
+    def __init__(self):
         super().__init__("moni2")
         self.get_logger().info(f"Initializing {self.get_name()}...")
 
-        self.window = window
+        self.window = MonitorWindow(self.get_logger().get_child('gui'))
         self.text_service = self.create_service(SetBool, 'set_bool', self.set_bool_callback)
         self.log_sub = self.create_subscription(Log, '/rosout', self.received_log, 10)
 
@@ -27,13 +27,17 @@ class Moni2Node(Node):
     def received_log(self, log: Log):
         self.window.received_log(log)
 
+    def destroy_node(self) -> bool:
+        self.get_logger().info("Closing down")
+        self.window.close()
+        return super().destroy_node()
+
 
 def main(args=None):
     rclpy.init(args=args)
     app = QApplication([])
 
-    window = MonitorWindow(rclpy.create_node('test').get_logger())
-    node = Moni2Node(window)
+    node = Moni2Node()
 
     try:
         x = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
@@ -42,7 +46,6 @@ def main(args=None):
     except KeyboardInterrupt:
         node.get_logger().info(f"Ctrl-C detected, shutting {node.get_name()} down!")
     finally:
-        window.close()
         node.destroy_node()
         rclpy.shutdown()
 
