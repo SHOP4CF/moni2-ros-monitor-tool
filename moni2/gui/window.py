@@ -3,11 +3,9 @@ import logging
 from typing import Callable
 from PyQt5.QtWidgets import (
     QMainWindow,
-    QDockWidget,
+    QTabWidget,
     QWidget,
     QVBoxLayout,
-    QLabel,
-    QListWidget,
     QAction,
     QMenu,
 )
@@ -15,12 +13,15 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import Qt
 
 from rcl_interfaces.msg import Log
+from moni2.node_info import NodeInfo
 from moni2.gui.log_widget import LogWidget
+from moni2.gui.node_widget import NodeWidget
+from moni2.gui.node_detail_widget import NodeDetailWidget
 
 
 class MonitorWindow(QMainWindow):
 
-    APP_NAME = "Socket tester"
+    APP_NAME = "Moni2"
 
     STATUSBAR_MESSAGE_TYPE = {
         'error': ('255,0,0', 'black'),
@@ -32,9 +33,9 @@ class MonitorWindow(QMainWindow):
         super().__init__(parent)
         self.log = log
 
-        self.label = QLabel("hejsa")
-
         self.log_widget: LogWidget = None
+        self.node_widget: NodeWidget = None
+        self.node_detail_widget: NodeDetailWidget = None
 
         self.init_components()
         self.init_ui()
@@ -43,6 +44,10 @@ class MonitorWindow(QMainWindow):
 
     def init_components(self):
         self.log_widget = LogWidget(self.log.get_child("LogWidget"), self)
+        self.node_widget = NodeWidget(self.log.get_child("NodeWidget"), self)
+        self.node_detail_widget = NodeDetailWidget(self.log.get_child("NodeDetailWidget"), self)
+
+        self.node_widget.node_clicked.connect(self.node_detail_widget.update_info)
 
     def init_ui(self):
         self.log.info("Initializing UI...")
@@ -52,16 +57,11 @@ class MonitorWindow(QMainWindow):
         widget = QWidget(self)
         layout = QVBoxLayout(widget)
         self.setCentralWidget(widget)
-        layout.addWidget(self.label)
 
         self.addDockWidget(Qt.BottomDockWidgetArea, self.log_widget)
-
-        dockWidget = QDockWidget('Dock test', self)
-        listWidget = QListWidget()
-        listWidget.addItem('Google')
-        listWidget.addItem('Apple')
-        dockWidget.setWidget(listWidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, dockWidget)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.node_widget)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.node_detail_widget)
+        self.setTabPosition(Qt.AllDockWidgetAreas, QTabWidget.North)
 
         self.show()
 
@@ -77,13 +77,9 @@ class MonitorWindow(QMainWindow):
         self._add_menu_action(file_menu, "&Quit", self.close_application, "Exit the application", "Ctrl+Q")
 
         views_menu = main_menu.addMenu("&Views")
+        views_menu.addAction(self.node_widget.toggleViewAction())
+        views_menu.addAction(self.node_detail_widget.toggleViewAction())
         views_menu.addAction(self.log_widget.toggleViewAction())
-
-    def toggle_log_view(self):
-        self.message("toggle log view")
-
-    def log_widget_visible(self, visible: bool):
-        self.log.info(f"Log widget visible: {visible}")
 
     @staticmethod
     def _add_menu_action(menu: QMenu, name: str, callback: Callable, status_tip="", shortcut="") -> QAction:
@@ -96,11 +92,11 @@ class MonitorWindow(QMainWindow):
         menu.addAction(action)
         return action
 
-    def set_text(self, text: str):
-        self.label.setText(text)
-
     def received_log(self, log: Log):
         self.log_widget.received_log(log)
+
+    def update_node(self, node: NodeInfo):
+        self.node_widget.update_node(node)
 
     @pyqtSlot(str, str)
     def message(self, message: str, message_type='info'):
