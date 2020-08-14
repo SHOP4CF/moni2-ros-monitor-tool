@@ -3,6 +3,7 @@ import rclpy
 from rclpy.node import Node
 from PyQt5.QtWidgets import QApplication
 from moni2.gui import MonitorWindow
+from moni2.node_info import NodeInfo, Topic, Service
 from std_srvs.srv import SetBool
 from rcl_interfaces.msg import Log
 
@@ -17,7 +18,28 @@ class Moni2Node(Node):
         self.text_service = self.create_service(SetBool, 'set_bool', self.set_bool_callback)
         self.log_sub = self.create_subscription(Log, '/rosout', self.received_log, 10)
 
+        self.timer = self.create_timer(2.0, self.check_nodes)
+
         self.get_logger().info(f"{self.get_name()} Initialized!")
+
+    def check_nodes(self):
+        nodes = self.get_node_names_and_namespaces()
+        print(f"## Nodes: {nodes}")
+        for node, namespace in nodes:
+            publishers = []
+            subscribers = []
+            services = []
+            clients = []
+            for name, types in self.get_publisher_names_and_types_by_node(node, namespace):
+                publishers.append(Topic(name, types))
+            for name, types in self.get_subscriber_names_and_types_by_node(node, namespace):
+                subscribers.append(Topic(name, types))
+            for name, types in self.get_service_names_and_types_by_node(node, namespace):
+                services.append(Service(name, types))
+            for name, types in self.get_client_names_and_types_by_node(node, namespace):
+                clients.append(Service(name, types))
+            node_info = NodeInfo(node, publishers, subscribers, services, clients)
+            self.window.update_node(node_info)
 
     def set_bool_callback(self, request: SetBool.Request, response: SetBool.Response):
         text = "Soo true!" if request.data else "Soo false!"
