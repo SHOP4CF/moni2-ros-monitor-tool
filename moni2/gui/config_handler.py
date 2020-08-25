@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
     QAction,
     QFileDialog
 )
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtCore import QObject, pyqtSignal, QSettings
 from moni2.gui.node_dialog import EditNodeListDialog
 
@@ -19,6 +19,7 @@ class ConfigHandler(QObject):
     node_list_updated = pyqtSignal(list)
 
     KEY_RECENT_CONFIGS = 'recent_configs'
+    KEY_LAST_CONFIG = 'last_config'
 
     def __init__(self,
                  log: logging.Logger,
@@ -35,9 +36,13 @@ class ConfigHandler(QObject):
         self.path = ''
         self.config = {}
         self.recent_menu: QMenu = None
+        self.edit_action: QAction = None
 
     def open_recent(self):
-         pass
+        settings = QSettings(self.organization, self.app_name)
+        filepath = settings.value(self.KEY_LAST_CONFIG, '')
+        if filepath:
+            self._open_config(filepath)
 
     def _new_config(self):
         self.log.info("New configuration")
@@ -57,6 +62,7 @@ class ConfigHandler(QObject):
         self.config = config
         self._load_config(config)
         self._update_recent_list(filepath)
+        self.edit_action.setEnabled(True)
         self.message.emit("Successfully loaded new configuration", 'info')
 
     def _save_as_config(self):
@@ -114,13 +120,14 @@ class ConfigHandler(QObject):
         nodes = [node['name'] for node in config['nodes']]
         self.node_list_updated.emit(nodes)
 
-    def _update_recent_list(self, filename: str):
+    def _update_recent_list(self, filepath: str):
         settings = QSettings(self.organization, self.app_name)
+        settings.setValue(self.KEY_LAST_CONFIG, filepath)
         recent_paths = settings.value(self.KEY_RECENT_CONFIGS, [])
         recent_paths = deque(recent_paths, maxlen=5)
-        if filename in recent_paths:
-            recent_paths.remove(filename)
-        recent_paths.appendleft(filename)
+        if filepath in recent_paths:
+            recent_paths.remove(filepath)
+        recent_paths.appendleft(filepath)
         settings.setValue(self.KEY_RECENT_CONFIGS, list(recent_paths))
         self._update_recent_config_menu()
 
@@ -138,11 +145,13 @@ class ConfigHandler(QObject):
 
     def create_menu(self, menu: QMenu):
         new_action = QAction(QIcon.fromTheme('document-new'), "New", menu)
+        new_action.setShortcut(QKeySequence.New)
         new_action.setStatusTip("Create new configuration")
         new_action.triggered.connect(self._new_config)
         menu.addAction(new_action)
 
         open_action = QAction(QIcon.fromTheme('document-open'), "Open", menu)
+        open_action.setShortcut(QKeySequence.Open)
         open_action.setStatusTip("Open existing configuration")
         open_action.triggered.connect(self._open_config)
         menu.addAction(open_action)
@@ -153,11 +162,14 @@ class ConfigHandler(QObject):
         self._update_recent_config_menu()
 
         save_as_action = QAction(QIcon.fromTheme('document-save-as'), "Save as", menu)
+        save_as_action.setShortcuts([QKeySequence.Save, QKeySequence.SaveAs])
         save_as_action.setStatusTip("Save configuration")
         save_as_action.triggered.connect(self._save_as_config)
         menu.addAction(save_as_action)
 
-        edit_action = QAction(QIcon.fromTheme('document-properties'), "Edit", menu)
-        edit_action.setStatusTip("Edit configuration")
-        edit_action.triggered.connect(self._edit_config)
-        menu.addAction(edit_action)
+        self.edit_action = QAction(QIcon.fromTheme('document-properties'), "Edit", menu)
+        self.edit_action.setShortcut("Ctrl+E")
+        self.edit_action.setStatusTip("Edit configuration")
+        self.edit_action.triggered.connect(self._edit_config)
+        self.edit_action.setEnabled(False)
+        menu.addAction(self.edit_action)

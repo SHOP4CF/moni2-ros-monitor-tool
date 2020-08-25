@@ -46,6 +46,7 @@ class MonitorWindow(QMainWindow):
         self.init_ui()
         self.init_menu()
         self.message("Initialized")
+        self.config.open_recent()
 
     def init_components(self):
         self.log_widget = LogWidget(self.log.get_child("LogWidget"), self)
