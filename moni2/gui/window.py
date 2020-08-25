@@ -80,30 +80,18 @@ class MonitorWindow(QMainWindow):
         file_menu = main_menu.addMenu("&File")
         self.config.create_menu(file_menu)
         file_menu.addSeparator()
-        self._add_menu_action(file_menu, "Settings", callback=lambda: self.message("TODO"))
+        settings_action = QAction(QIcon.fromTheme('preferences-other'), 'Settings', file_menu)
+        settings_action.triggered.connect(lambda: self.message("TODO"))
+        file_menu.addAction(settings_action)
         file_menu.addSeparator()
-        self._add_menu_action(file_menu, "&Quit", self.close_application, "Exit the application", "Ctrl+Q")
+        exit_action = QAction(QIcon.fromTheme('application-exit'), "&Quit", file_menu)
+        exit_action.setShortcut("Ctrl+Q")
+        exit_action.setStatusTip("Exit the application")
+        exit_action.triggered.connect(self.close_application)
+        file_menu.addAction(exit_action)
 
         views_menu = main_menu.addMenu("&Views")
         views_menu.addAction(self.log_widget.toggleViewAction())
-
-    def _edit_nodes(self):
-        self.log.info("Editing list of nodes")
-        dialog = EditNodeListDialog(self.log.get_child("EditNodeListDialog"), self)
-        self.node_updated.connect(dialog.node_updated)
-        dialog.node_list_updated.connect(self.node_model.node_list_updated)
-        dialog.exec()
-
-    @staticmethod
-    def _add_menu_action(menu: QMenu, name: str, callback: Callable, status_tip="", shortcut="") -> QAction:
-        action = QAction(name, menu)
-        if shortcut:
-            action.setShortcut(shortcut)
-        if status_tip:
-            action.setStatusTip(status_tip)
-        action.triggered.connect(callback)
-        menu.addAction(action)
-        return action
 
     def received_log(self, log: Log):
         self.log_widget.received_log(log)
