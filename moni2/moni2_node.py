@@ -6,6 +6,7 @@ from moni2.gui import MonitorWindow
 from moni2.node_info import NodeInfo, Topic, Service
 from std_srvs.srv import SetBool
 from rcl_interfaces.msg import Log
+from ament_index_python.packages import get_package_share_directory
 
 
 class Moni2Node(Node):
@@ -14,10 +15,9 @@ class Moni2Node(Node):
         super().__init__("moni2")
         self.get_logger().info(f"Initializing {self.get_name()}...")
 
-        self.window = MonitorWindow(self.get_logger().get_child('gui'))
+        self.window = MonitorWindow(self.get_logger().get_child('gui'), get_package_share_directory('moni2'))
         self.text_service = self.create_service(SetBool, 'set_bool', self.set_bool_callback)
         self.log_sub = self.create_subscription(Log, '/rosout', self.received_log, 10)
-
         self.timer = self.create_timer(2.0, self.check_nodes)
 
         self.get_logger().info(f"{self.get_name()} Initialized!")

@@ -1,27 +1,29 @@
 import sys
+import os
 import logging
 from typing import Callable
 from PyQt5.QtWidgets import (
     QMainWindow,
     QTabWidget,
-    QWidget,
-    QVBoxLayout,
     QAction,
     QMenu,
 )
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from PyQt5.QtCore import Qt
 
 from rcl_interfaces.msg import Log
 from moni2.node_info import NodeInfo
 from moni2.gui.log_widget import LogWidget
-from moni2.gui.node_widget import NodeWidget
-from moni2.gui.node_detail_widget import NodeDetailWidget
+from moni2.gui.node_dialog import EditNodeListDialog
+from moni2.gui.node_model import NodeModel
 
 
 class MonitorWindow(QMainWindow):
 
     APP_NAME = "Moni2"
+
+    node_updated = pyqtSignal(NodeInfo)
 
     STATUSBAR_MESSAGE_TYPE = {
         'error': ('255,0,0', 'black'),
@@ -29,13 +31,13 @@ class MonitorWindow(QMainWindow):
         'info': ('255,255,255', 'black'),
     }
 
-    def __init__(self, log: logging.Logger, parent=None):
+    def __init__(self, log: logging.Logger, image_path: str, parent=None):
         super().__init__(parent)
         self.log = log
+        self.image_path = image_path
 
         self.log_widget: LogWidget = None
-        self.node_widget: NodeWidget = None
-        self.node_detail_widget: NodeDetailWidget = None
+        self.node_model: NodeModel = None
 
         self.init_components()
         self.init_ui()
@@ -44,23 +46,22 @@ class MonitorWindow(QMainWindow):
 
     def init_components(self):
         self.log_widget = LogWidget(self.log.get_child("LogWidget"), self)
-        self.node_widget = NodeWidget(self.log.get_child("NodeWidget"), self)
-        self.node_detail_widget = NodeDetailWidget(self.log.get_child("NodeDetailWidget"), self)
+        self.node_model = NodeModel(self.log.get_child("NodeModel"), self)
 
-        self.node_widget.node_clicked.connect(self.node_detail_widget.update_info)
+        self.log_widget.warning_counter.connect(self.node_model.log_warning_count)
+        self.log_widget.error_counter.connect(self.node_model.log_error_count)
 
     def init_ui(self):
         self.log.info("Initializing UI...")
         self.setWindowTitle(self.APP_NAME)
-        self.setGeometry(100, 100, 640, 480)
+        self.setGeometry(100, 100, 800, 600)
 
-        widget = QWidget(self)
-        layout = QVBoxLayout(widget)
-        self.setCentralWidget(widget)
+        logo_path = self.image_path + os.path.sep + 'logo.png'
+        self.setWindowIcon(QIcon(logo_path))
+
+        self.setCentralWidget(self.node_model)
 
         self.addDockWidget(Qt.BottomDockWidgetArea, self.log_widget)
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.node_widget)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.node_detail_widget)
         self.setTabPosition(Qt.AllDockWidgetAreas, QTabWidget.North)
 
         self.show()
@@ -70,6 +71,7 @@ class MonitorWindow(QMainWindow):
         main_menu = self.menuBar()
         file_menu = main_menu.addMenu("&File")
         self._add_menu_action(file_menu, "Save config", callback=lambda: self.message("TODO"))
+        self._add_menu_action(file_menu, "Edit config", callback=self._edit_nodes)
         self._add_menu_action(file_menu, "Load config", callback=lambda: self.message("TODO"))
         file_menu.addSeparator()
         self._add_menu_action(file_menu, "Settings", callback=lambda: self.message("TODO"))
@@ -77,9 +79,14 @@ class MonitorWindow(QMainWindow):
         self._add_menu_action(file_menu, "&Quit", self.close_application, "Exit the application", "Ctrl+Q")
 
         views_menu = main_menu.addMenu("&Views")
-        views_menu.addAction(self.node_widget.toggleViewAction())
-        views_menu.addAction(self.node_detail_widget.toggleViewAction())
         views_menu.addAction(self.log_widget.toggleViewAction())
+
+    def _edit_nodes(self):
+        self.log.info("Editing list of nodes")
+        dialog = EditNodeListDialog(self.log.get_child("EditNodeListDialog"), self)
+        self.node_updated.connect(dialog.node_updated)
+        dialog.node_list_updated.connect(self.node_model.node_list_updated)
+        dialog.exec()
 
     @staticmethod
     def _add_menu_action(menu: QMenu, name: str, callback: Callable, status_tip="", shortcut="") -> QAction:
@@ -96,7 +103,7 @@ class MonitorWindow(QMainWindow):
         self.log_widget.received_log(log)
 
     def update_node(self, node: NodeInfo):
-        self.node_widget.update_node(node)
+        self.node_updated.emit(node)
 
     @pyqtSlot(str, str)
     def message(self, message: str, message_type='info'):
