@@ -4,7 +4,6 @@ from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QGridLayout,
-    QTableView,
     QScrollArea
 )
 from PyQt5.QtCore import pyqtSlot
@@ -19,9 +18,6 @@ class NodeModel(QWidget):
         self.log = log
 
         self.nodes: Dict[str, NodeItem] = {}
-
-        self.node_list_view = QTableView()
-
         self.layout: QGridLayout = None
         self.cols = 2
 
@@ -68,3 +64,12 @@ class NodeModel(QWidget):
     def log_error_count(self, log_name: str, warning_count: int):
         if log_name in self.nodes:
             self.nodes[log_name].set_error_count(warning_count)
+
+    @pyqtSlot(list)
+    def online_nodes(self, nodes: [str]):
+        for node in self.nodes:
+            self.nodes[node].set_online(False)
+
+        for node in nodes:
+            if node in self.nodes:
+                self.nodes[node].set_online(True)

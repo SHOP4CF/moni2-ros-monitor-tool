@@ -26,6 +26,7 @@ class MonitorWindow(QMainWindow):
     ORGANIZATION = "dti.dk"
 
     node_updated = pyqtSignal(NodeInfo)
+    online_nodes = pyqtSignal(list)
 
     STATUSBAR_MESSAGE_TYPE = {
         'error': ('255,0,0', 'black'),
@@ -56,6 +57,8 @@ class MonitorWindow(QMainWindow):
 
         self.log_widget.warning_counter.connect(self.node_model.log_warning_count)
         self.log_widget.error_counter.connect(self.node_model.log_error_count)
+
+        self.online_nodes.connect(self.node_model.online_nodes)
 
         self.config.message.connect(self.message)
         self.config.node_list_updated.connect(self.node_model.node_list_updated)
@@ -99,6 +102,9 @@ class MonitorWindow(QMainWindow):
 
     def update_node(self, node: NodeInfo):
         self.node_updated.emit(node)
+
+    def update_online_nodes(self, nodes: [str]):
+        self.online_nodes.emit(nodes)
 
     @pyqtSlot(str, str)
     def message(self, message: str, message_type='info'):

@@ -83,3 +83,7 @@ class NodeItem(QWidget):
     def set_error_count(self, count: int):
         self.n_errors.setText(f"🛑{count}")
 
+    def set_online(self, online: bool):
+        text, color = ("✅", "green") if online else ("❌", "red")
+        self.status.setText(text)
+        self.status.setStyleSheet(f"color: {color}")
