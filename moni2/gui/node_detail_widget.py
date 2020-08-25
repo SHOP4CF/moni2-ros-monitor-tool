@@ -46,4 +46,4 @@ class NodeDetailWidget(QDockWidget):
     @pyqtSlot(NodeInfo)
     def update_info(self, node: NodeInfo):
         self.node_name_label.setText(node.name)
-        self.n_topics_label.setText(len(node.publishers))
+        self.n_topics_label.setText(f"{len(node.publishers)}")
