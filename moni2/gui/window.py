@@ -9,19 +9,21 @@ from PyQt5.QtWidgets import (
     QMenu,
 )
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
 
 from rcl_interfaces.msg import Log
 from moni2.node_info import NodeInfo
 from moni2.gui.log_widget import LogWidget
 from moni2.gui.node_dialog import EditNodeListDialog
 from moni2.gui.node_model import NodeModel
+from moni2.gui.config_handler import ConfigHandler
 
 
 class MonitorWindow(QMainWindow):
 
+    VERSION = "0.0.1"
     APP_NAME = "Moni2"
+    ORGANIZATION = "dti.dk"
 
     node_updated = pyqtSignal(NodeInfo)
 
@@ -38,6 +40,7 @@ class MonitorWindow(QMainWindow):
 
         self.log_widget: LogWidget = None
         self.node_model: NodeModel = None
+        self.config: ConfigHandler = None
 
         self.init_components()
         self.init_ui()
@@ -47,9 +50,14 @@ class MonitorWindow(QMainWindow):
     def init_components(self):
         self.log_widget = LogWidget(self.log.get_child("LogWidget"), self)
         self.node_model = NodeModel(self.log.get_child("NodeModel"), self)
+        self.config = ConfigHandler(self.log.get_child("ConfigHandler"),
+                                    self.ORGANIZATION, self.APP_NAME, self.VERSION, self)
 
         self.log_widget.warning_counter.connect(self.node_model.log_warning_count)
         self.log_widget.error_counter.connect(self.node_model.log_error_count)
+
+        self.config.message.connect(self.message)
+        self.config.node_list_updated.connect(self.node_model.node_list_updated)
 
     def init_ui(self):
         self.log.info("Initializing UI...")
@@ -70,9 +78,7 @@ class MonitorWindow(QMainWindow):
         self.log.info("Initializing menu...")
         main_menu = self.menuBar()
         file_menu = main_menu.addMenu("&File")
-        self._add_menu_action(file_menu, "Save config", callback=lambda: self.message("TODO"))
-        self._add_menu_action(file_menu, "Edit config", callback=self._edit_nodes)
-        self._add_menu_action(file_menu, "Load config", callback=lambda: self.message("TODO"))
+        self.config.create_menu(file_menu)
         file_menu.addSeparator()
         self._add_menu_action(file_menu, "Settings", callback=lambda: self.message("TODO"))
         file_menu.addSeparator()
