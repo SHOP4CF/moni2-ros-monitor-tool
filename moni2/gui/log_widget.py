@@ -1,5 +1,6 @@
 import logging
 import fnmatch
+from collections import defaultdict
 from rcl_interfaces.msg import Log
 from typing import Optional
 from PyQt5.QtWidgets import (
@@ -13,7 +14,7 @@ from PyQt5.QtWidgets import (
     QLineEdit,
 )
 from PyQt5.QtGui import QContextMenuEvent, QIcon
-from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
 
 
 class LogWidget(QDockWidget):
@@ -23,12 +24,19 @@ class LogWidget(QDockWidget):
                  logging.ERROR: "ERROR",
                  logging.FATAL: "FATAL"}
 
+    warning_counter = pyqtSignal(str, int)
+    error_counter = pyqtSignal(str, int)
+
     def __init__(self, log: logging.Logger, parent: Optional[QWidget] = None):
         super().__init__("Log widget", parent)
         self.log = log
 
         self.log_level = logging.INFO
         self.log_list = []
+
+        self.warning_count = defaultdict(int)
+        self.error_count = defaultdict(int)
+
         self.log_list_view = QListWidget()
         self.filter_input = QLineEdit()
         self.filter_text = ''
@@ -63,6 +71,12 @@ class LogWidget(QDockWidget):
         self.log_list.append(log)
         if self.log_level <= log.level:
             self.log_list_view.insertItem(0, f'[{self.LOG_LABEL[log.level]}] [{log.name}]: {log.msg}')
+        if log.level == logging.WARNING:
+            self.warning_count[log.name] += 1
+            self.warning_counter.emit(log.name, self.warning_count[log.name])
+        if log.level >= logging.ERROR:
+            self.error_count[log.name] += 1
+            self.error_counter.emit(log.name, self.error_count[log.name])
 
     @pyqtSlot(str)
     def on_filter_text_changed(self, text):
