@@ -8,10 +8,21 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QAbstractItemView,
     QLayout,
-    QAbstractScrollArea,
+    QListView,
+    QFrame
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSlot
 from moni2.node_info import NodeInfo
+
+
+class HLine(QFrame):
+
+    def __init__(self, height=2):
+        super().__init__()
+        self.setFixedHeight(height)
+        self.setStyleSheet("background-color: #333333;")
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)
 
 
 class NodeItem(QWidget):
@@ -20,7 +31,9 @@ class NodeItem(QWidget):
         super().__init__(parent)
         self.log = log
 
-        self.status = QLabel("❌✅")
+        self.node_info: NodeInfo = None
+
+        self.status = QLabel("")
         self.node_name = QLabel(node_name)
         self.n_errors = QLabel("🛑0")
         self.n_warnings = QLabel("⚠0")
@@ -46,36 +59,59 @@ class NodeItem(QWidget):
         topic_layout = QHBoxLayout()
         self.publishers, pub_layout = self._create_list("Publishers")
         self.subscribers, sub_layout = self._create_list("Subscribers")
-        self.services, serv_layout = self._create_list("Services")
-        self.clients, cli_layout = self._create_list("Clients")
         topic_layout.addLayout(pub_layout)
         topic_layout.addLayout(sub_layout)
-        topic_layout.addLayout(serv_layout)
-        topic_layout.addLayout(cli_layout)
+
+        service_layout = QHBoxLayout()
+        self.services, serv_layout = self._create_list("Services")
+        self.clients, cli_layout = self._create_list("Clients")
+        service_layout.addLayout(serv_layout)
+        service_layout.addLayout(cli_layout)
 
         main_layout = QVBoxLayout(self)
         main_layout.addLayout(status_layout)
+        main_layout.addWidget(HLine())
         main_layout.addLayout(topic_layout)
+        main_layout.addWidget(HLine(1))
+        main_layout.addLayout(service_layout)
+        main_layout.addStretch(10)
 
         self.setLayout(main_layout)
         self.setObjectName("NodeItem")
         self.setAttribute(Qt.WA_StyledBackground, True)
         self.setStyleSheet("background-color: #dddddd; border-radius: 10px;")
+        self.adjustSize()
 
+    @pyqtSlot(NodeInfo)
     def update_node(self, node: NodeInfo):
-        pass
+        if node.name == self.node_name.text() and self.node_info != node:
+            self.node_info = node
+            self.publishers.clear()
+            for pub in node.publishers:
+                self.publishers.addItem(pub.name)
+            self.subscribers.clear()
+            for sub in node.subscribers:
+                self.subscribers.addItem(sub.name)
+            self.services.clear()
+            for serv in node.services:
+                self.services.addItem(serv.name)
+            self.clients.clear()
+            for client in node.clients:
+                self.clients.addItem(client.name)
 
     def _create_list(self, name: str) -> (QListWidget, QLayout):
-        list = QListWidget()
-        list.setSelectionMode(QAbstractItemView.NoSelection)
-        list.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
-        list.setStyleSheet("QListView{border:none}")
+        topic_list = QListWidget()
+        topic_list.setSelectionMode(QAbstractItemView.NoSelection)
+        topic_list.setResizeMode(QListView.Adjust)
+        topic_list.setStyleSheet("QListView{border:none}")
+        topic_list.setUniformItemSizes(True)
+        topic_list.addItem("None")
 
         layout = QVBoxLayout()
         layout.addWidget(QLabel(name))
-        layout.addWidget(list)
+        layout.addWidget(topic_list)
 
-        return list, layout
+        return topic_list, layout
 
     def set_warning_count(self, count: int):
         self.n_warnings.setText(f"⚠{count}")
@@ -87,3 +123,4 @@ class NodeItem(QWidget):
         text, color = ("✅", "green") if online else ("❌", "red")
         self.status.setText(text)
         self.status.setStyleSheet(f"color: {color}")
+        self.node_name.setStyleSheet(f"color: {color}")
