@@ -1,4 +1,3 @@
-
 class Topic:
 
     def __init__(self, name: str, types: [str]):
@@ -10,6 +9,11 @@ class Topic:
 
     def __repr__(self) -> str:
         return self.__str__()
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Topic):
+            return False
+        return self.name == other.name and self.types == other.types
 
 
 class Service:
@@ -23,6 +27,11 @@ class Service:
 
     def __repr__(self) -> str:
         return self.__str__()
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Service):
+            return False
+        return self.name == other.name and self.types == other.types
 
 
 class NodeInfo:
@@ -39,3 +48,12 @@ class NodeInfo:
     def __str__(self) -> str:
         return f"<Node: {self.name}, \n\tpublishers: {self.publishers}\n\tsubscribers: {self.subscribers}" \
                f"services: {self.services}\n\tclients: {self.clients}>"
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, NodeInfo):
+            return False
+        return self.name == other.name and \
+            self.publishers == other.publishers and \
+            self.subscribers == other.subscribers and \
+            self.services == other.services and \
+            self.clients == other.clients
