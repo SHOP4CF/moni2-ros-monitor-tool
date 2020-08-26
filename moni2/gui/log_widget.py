@@ -28,7 +28,7 @@ class LogWidget(QDockWidget):
     error_counter = pyqtSignal(str, int)
 
     def __init__(self, log: logging.Logger, parent: Optional[QWidget] = None):
-        super().__init__("Log widget", parent)
+        super().__init__("Log", parent)
         self.log = log
 
         self.log_level = logging.INFO
