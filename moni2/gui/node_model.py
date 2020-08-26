@@ -4,7 +4,8 @@ from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QGridLayout,
-    QScrollArea
+    QScrollArea,
+    QScroller
 )
 from PyQt5.QtCore import pyqtSlot
 
@@ -33,6 +34,8 @@ class NodeModel(QWidget):
         layout = QVBoxLayout(self)
         scroll_area = QScrollArea(self)
         scroll_area.setWidgetResizable(True)
+        scroll_area.setStyleSheet("QScrollArea{border:none}")
+        QScroller.grabGesture(scroll_area.viewport(), QScroller.LeftMouseButtonGesture)
         scroll_area_widget = QWidget()
         self.layout = QGridLayout(scroll_area_widget)
         scroll_area.setWidget(scroll_area_widget)
