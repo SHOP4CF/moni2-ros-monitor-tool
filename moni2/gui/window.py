@@ -1,12 +1,10 @@
 import sys
 import os
 import logging
-from typing import Callable
 from PyQt5.QtWidgets import (
     QMainWindow,
     QTabWidget,
     QAction,
-    QMenu,
 )
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
@@ -14,7 +12,6 @@ from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
 from rcl_interfaces.msg import Log
 from moni2.node_info import NodeInfo
 from moni2.gui.log_widget import LogWidget
-from moni2.gui.node_dialog import EditNodeListDialog
 from moni2.gui.node_model import NodeModel
 from moni2.gui.config_handler import ConfigHandler
 
@@ -43,6 +40,8 @@ class MonitorWindow(QMainWindow):
         self.node_model: NodeModel = None
         self.config: ConfigHandler = None
 
+        self.watched_nodes: [str] = []
+
         self.init_components()
         self.init_ui()
         self.init_menu()
@@ -51,7 +50,7 @@ class MonitorWindow(QMainWindow):
 
     def init_components(self):
         self.log_widget = LogWidget(self.log.get_child("LogWidget"), self)
-        self.node_model = NodeModel(self.log.get_child("NodeModel"), self)
+        self.node_model = NodeModel(self.log.get_child("NodeModel"), self.node_updated, self)
         self.config = ConfigHandler(self.log.get_child("ConfigHandler"),
                                     self.ORGANIZATION, self.APP_NAME, self.VERSION, self)
 
@@ -62,6 +61,7 @@ class MonitorWindow(QMainWindow):
 
         self.config.message.connect(self.message)
         self.config.node_list_updated.connect(self.node_model.node_list_updated)
+        self.config.node_list_updated.connect(self.node_list_updated)
 
     def init_ui(self):
         self.log.info("Initializing UI...")
@@ -103,8 +103,9 @@ class MonitorWindow(QMainWindow):
     def update_node(self, node: NodeInfo):
         self.node_updated.emit(node)
 
-    def update_online_nodes(self, nodes: [str]):
+    def update_online_nodes(self, nodes: [str]) -> [str]:
         self.online_nodes.emit(nodes)
+        return self.watched_nodes
 
     @pyqtSlot(str, str)
     def message(self, message: str, message_type='info'):
@@ -117,6 +118,10 @@ class MonitorWindow(QMainWindow):
         self.statusBar().setStyleSheet(style)
         self.statusBar().showMessage(message)
         self.log.info(message)
+
+    @pyqtSlot(list)
+    def node_list_updated(self, nodes: [str]):
+        self.watched_nodes = nodes
 
     def close_application(self):
         self.message("Closing the application")

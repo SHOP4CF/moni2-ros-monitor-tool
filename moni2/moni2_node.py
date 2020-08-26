@@ -25,8 +25,10 @@ class Moni2Node(Node):
     def check_nodes(self):
         nodes = self.get_node_names_and_namespaces()
         print(f"## Nodes: {nodes}")
-        self.window.update_online_nodes([node for node, _ in nodes])
+        watched_nodes = self.window.update_online_nodes([node for node, _ in nodes])
         for node, namespace in nodes:
+            if node not in watched_nodes:
+                continue
             publishers = []
             subscribers = []
             services = []
