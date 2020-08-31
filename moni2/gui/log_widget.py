@@ -7,13 +7,14 @@ from PyQt5.QtWidgets import (
     QWidget,
     QDockWidget,
     QListWidget,
+    QListWidgetItem,
     QMenu,
     QAction,
     QActionGroup,
     QVBoxLayout,
     QLineEdit,
 )
-from PyQt5.QtGui import QContextMenuEvent, QIcon
+from PyQt5.QtGui import QContextMenuEvent, QIcon, QColor
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
 
 
@@ -23,6 +24,14 @@ class LogWidget(QDockWidget):
                  logging.WARNING: "WARN ",
                  logging.ERROR: "ERROR",
                  logging.FATAL: "FATAL"}
+
+    LOG_COLOR = {
+        logging.DEBUG: QColor("white"),
+        logging.INFO: QColor("white"),
+        logging.WARNING: QColor("yellow"),
+        logging.ERROR: QColor("red"),
+        logging.FATAL: QColor("red")
+    }
 
     warning_counter = pyqtSignal(str, int)
     error_counter = pyqtSignal(str, int)
@@ -66,11 +75,17 @@ class LogWidget(QDockWidget):
 
         self.setWidget(main_widget)
 
+    def _insert_log(self, log: Log):
+        text = f'[{self.LOG_LABEL[log.level]}] [{log.name}]: {log.msg}'
+        item = QListWidgetItem(text)
+        item.setBackground(self.LOG_COLOR[log.level])
+        self.log_list_view.insertItem(0, item)
+
     @pyqtSlot(str)
     def received_log(self, log: Log):
         self.log_list.append(log)
         if self.log_level <= log.level:
-            self.log_list_view.insertItem(0, f'[{self.LOG_LABEL[log.level]}] [{log.name}]: {log.msg}')
+            self._insert_log(log)
         if log.level == logging.WARNING:
             self.warning_count[log.name] += 1
             self.warning_counter.emit(log.name, self.warning_count[log.name])
@@ -123,4 +138,4 @@ class LogWidget(QDockWidget):
                     self.log_list_view.clear()
                     for log in self.log_list:
                         if self.log_level <= log.level:
-                            self.log_list_view.insertItem(0, f'[{self.LOG_LABEL[log.level]}] [{log.name}]: {log.msg}')
+                            self._insert_log(log)
