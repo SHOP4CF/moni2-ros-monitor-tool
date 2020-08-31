@@ -6,7 +6,7 @@ from typing import Optional
 from PyQt5.QtWidgets import (
     QMenu,
     QAction,
-    QFileDialog
+    QFileDialog,
 )
 from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtCore import QObject, pyqtSignal, QSettings
@@ -34,7 +34,9 @@ class ConfigHandler(QObject):
         self.version = version
 
         self.path = ''
+        self.old_path = ''
         self.config = {}
+        self.old_config = {}
         self.recent_menu: QMenu = None
         self.edit_action: QAction = None
 
@@ -46,8 +48,11 @@ class ConfigHandler(QObject):
 
     def _new_config(self):
         self.log.info("New configuration")
+        self.old_path = self.path
+        self.old_config = self.config
+        self.path = ""
+        self.config = {'organization': self.organization, 'application': self.app_name, 'version': self.version}
         self._open_edit_dialog([])
-        # TODO: save the new configuration internally
 
     def _open_config(self, filepath=''):
         if not filepath:  # Ask the user to provide a filepath
@@ -60,25 +65,52 @@ class ConfigHandler(QObject):
             return
         self.path = filepath
         self.config = config
-        self._load_config(config)
+        if not self._load_config(config):
+            return
         self._update_recent_list(filepath)
         self.edit_action.setEnabled(True)
         self.message.emit("Successfully loaded new configuration", 'info')
 
     def _save_as_config(self):
-        self.message.emit("Save", 'info')
+        path = self._select_save_filepath()
+        if not path:
+            return
+        self._save_config(path)
+        self._open_config(self.path)
+
+    def _save_config(self, path: str):
+        with open(path, 'w') as json_file:
+            json.dump(self.config, json_file, indent=4)
+            self.log.info(f"Saved config file to: {path}")
+            self.path = path
 
     def _edit_config(self):
         self.log.info("Editing configuration")
-        nodes = [node['name'] for node in self.config['nodes']]
+        nodes = [node for node in self.config['nodes']]
         self._open_edit_dialog(nodes)
 
     def _open_edit_dialog(self, nodes: [str]):
-        dialog = EditNodeListDialog(self.log, self.parent())
+        dialog = EditNodeListDialog(self.log)
         dialog.set_nodes(nodes)
-        self.parent().node_updated.connect(dialog.node_updated)  # TODO: this is nasty
-        dialog.node_list_updated.connect(lambda new_nodes: self.node_list_updated.emit(new_nodes))
+        self.parent().online_nodes.connect(dialog.node_updated)  # TODO: this is nasty
         dialog.exec()
+
+        if dialog.result():
+            self.config['nodes'] = dialog.selected_nodes()
+            if not self.path:
+                self.path = self._select_save_filepath()
+            if self.path:
+                self._save_config(self.path)
+                self._open_config(self.path)
+                return
+        self.path = self.old_path
+        self.config = self.old_config
+
+    def _select_save_filepath(self) -> str:
+        file_filter = "Config file (*.json);;All files (*)"
+        filepath, _ = QFileDialog.getSaveFileName(self.parent(), "Save configuration file", "", file_filter)
+        self.log.info(f"Choosen path: {filepath}")
+        return filepath
 
     def _select_config_file(self) -> str:
         options = QFileDialog.Options()
@@ -116,9 +148,17 @@ class ConfigHandler(QObject):
                 self.message.emit(f"Invalid config file. {error}", "error")
             return error == ''
 
-    def _load_config(self, config: dict):
-        nodes = [node['name'] for node in config['nodes']]
-        self.node_list_updated.emit(nodes)
+    def _load_config(self, config: dict) -> bool:
+        try:
+            nodes = []
+            for node in config['nodes']:
+                assert type(node) == str, "Node must be a string"
+                nodes.append(node)
+            self.node_list_updated.emit(nodes)
+            return True
+        except Exception as e:
+            self.message.emit(f"Invalid config file. Some error while reading nodes: {e}", "error")
+            return False
 
     def _update_recent_list(self, filepath: str):
         settings = QSettings(self.organization, self.app_name)
