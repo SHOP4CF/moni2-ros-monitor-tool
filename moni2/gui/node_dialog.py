@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QLabel,
 )
 from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
-from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QTimer
 
 
 class DragListWidget(QListWidget):
@@ -54,6 +54,33 @@ class DragListWidget(QListWidget):
             self.dropped.emit()
 
 
+class TrashLabel(QLabel):
+
+    node_deleted = pyqtSignal()
+
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.setAcceptDrops(True)
+        self.setMouseTracking(True)
+        self.setText("🗑")
+        self.setAlignment(Qt.AlignHCenter)
+        self.setStyleSheet("font: 40pt;")
+
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
+        event.accept()
+        super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
+        event.setDropAction(Qt.MoveAction)
+        super().dragMoveEvent(event)
+
+    def dropEvent(self, event: QDropEvent) -> None:
+        event.setDropAction(Qt.MoveAction)
+        event.accept()
+        super().dropEvent(event)
+        self.node_deleted.emit()
+
+
 class EditNodeListDialog(QDialog):
     node_list_updated = pyqtSignal(list)
 
@@ -91,15 +118,21 @@ class EditNodeListDialog(QDialog):
         online_layout = QVBoxLayout()
         online_layout.addWidget(QLabel("Online nodes"))
         online_layout.addWidget(self.online_node_list)
+        online_layout.addWidget(QLabel())
 
         selected_layout = QVBoxLayout()
         selected_layout.addWidget(QLabel("Selected nodes"))
         selected_layout.addWidget(self.node_list)
+        selected_layout.addWidget(self.nodes_selected_label)
 
         new_node_layout = QVBoxLayout()
         new_node_layout.addWidget(QLabel("Add offline node"))
         new_node_layout.addWidget(self.new_node_input)
         new_node_layout.addWidget(self.new_node_button)
+        new_node_layout.addSpacing(20)
+        delete_node = TrashLabel()
+        delete_node.node_deleted.connect(self._delayed_updated_selected_nodes)
+        new_node_layout.addWidget(delete_node)
         new_node_layout.addStretch(10)
 
         layout = QHBoxLayout()
@@ -114,7 +147,6 @@ class EditNodeListDialog(QDialog):
 
         main_layout = QVBoxLayout()
         main_layout.addLayout(layout)
-        main_layout.addWidget(self.nodes_selected_label)
         main_layout.addSpacing(20)
         main_layout.addWidget(button_box)
         self.setLayout(main_layout)
@@ -137,11 +169,8 @@ class EditNodeListDialog(QDialog):
             self.node_list.addItem(node)
         self._update_selected_nodes()
 
-    def accept(self) -> None:
-        nodes = [self.node_list.item(i).text() for i in range(self.node_list.count())]
-        self.log.info(f"Nodes: {nodes}")
-        self.node_list_updated.emit(nodes)
-        super().accept()
+    def selected_nodes(self) -> [str]:
+        return [self.node_list.item(i).text() for i in range(self.node_list.count())]
 
     @pyqtSlot(list)
     def node_updated(self, nodes: [str]):
@@ -158,3 +187,9 @@ class EditNodeListDialog(QDialog):
     def _update_selected_nodes(self):
         total = self.node_list.count()
         self.nodes_selected_label.setText(f"{total} nodes selected")
+
+    def _delayed_updated_selected_nodes(self):
+        timer = QTimer(self)
+        timer.setSingleShot(True)
+        timer.timeout.connect(self._update_selected_nodes)
+        timer.start(500)
