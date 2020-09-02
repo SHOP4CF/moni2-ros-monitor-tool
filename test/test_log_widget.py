@@ -1,6 +1,6 @@
 import sys
 import logging
-from moni2.gui import LogWidget
+from moni2.gui.log_widget import LogWidget
 from rcl_interfaces.msg import Log
 
 from PyQt5.QtWidgets import QApplication
