@@ -11,6 +11,32 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtCore import QObject, pyqtSignal, QSettings
 from moni2.gui.node_dialog import EditNodeListDialog
+from moni2.node_info import NodeName
+
+
+class Config:
+    def __init__(self, organization: str, app_name: str, app_version: str, node_names: [NodeName]):
+        self.organization = organization
+        self.app_name = app_name
+        self.version = app_version
+        self.node_names = node_names
+
+    def __repr__(self) -> str:
+        return f'Config<org={self.organization}, name={self.app_name}, version={self.version}, nodes={self.node_names}>'
+
+    @staticmethod
+    def as_dict(conf: 'Config') -> dict:
+        res = conf.__dict__
+        res['node_names'] = [node._asdict() for node in conf.node_names]
+        return res
+
+    @staticmethod
+    def as_payload(conf: dict) -> 'Config':
+        return Config(
+            conf['organization'],
+            conf['app_name'],
+            conf['version'],
+            [NodeName(**node) for node in conf['node_names']])
 
 
 class ConfigHandler(QObject):
@@ -35,8 +61,8 @@ class ConfigHandler(QObject):
 
         self.path = ''
         self.old_path = ''
-        self.config = {}
-        self.old_config = {}
+        self.config: Config = None
+        self.old_config: Config = None
         self.recent_menu: QMenu = None
         self.edit_action: QAction = None
 
@@ -51,7 +77,7 @@ class ConfigHandler(QObject):
         self.old_path = self.path
         self.old_config = self.config
         self.path = ""
-        self.config = {'organization': self.organization, 'application': self.app_name, 'version': self.version}
+        self.config = Config(self.organization, self.app_name, self.version, [])
         self._open_edit_dialog([])
 
     def _open_config(self, filepath=''):
@@ -63,10 +89,11 @@ class ConfigHandler(QObject):
         valid = self._validate_config_file(config)
         if not valid:
             return
+        config = self._load_config(config)
+        if not config:
+            return
         self.path = filepath
         self.config = config
-        if not self._load_config(config):
-            return
         self._update_recent_list(filepath)
         self.edit_action.setEnabled(True)
         self.message.emit("Successfully loaded new configuration", 'info')
@@ -80,23 +107,23 @@ class ConfigHandler(QObject):
 
     def _save_config(self, path: str):
         with open(path, 'w') as json_file:
-            json.dump(self.config, json_file, indent=4)
+            json.dump(Config.as_dict(self.config), json_file, indent=4)
             self.log.info(f"Saved config file to: {path}")
             self.path = path
 
     def _edit_config(self):
         self.log.info("Editing configuration")
-        nodes = [node for node in self.config['nodes']]
+        nodes = [node for node in self.config.node_names]
         self._open_edit_dialog(nodes)
 
-    def _open_edit_dialog(self, nodes: [str]):
+    def _open_edit_dialog(self, nodes: [NodeName]):
         dialog = EditNodeListDialog(self.log)
         dialog.set_nodes(nodes)
         self.parent().online_nodes.connect(dialog.node_updated)  # TODO: this is nasty
         dialog.exec()
 
         if dialog.result():
-            self.config['nodes'] = dialog.selected_nodes()
+            self.config.node_names = dialog.selected_nodes()
             if not self.path:
                 self.path = self._select_save_filepath()
             if self.path:
@@ -139,8 +166,8 @@ class ConfigHandler(QObject):
                 error = "Wrong application"
             if 'version' in config and version.parse(config['version']).minor < version.parse(self.version).minor:
                 error = "Version is not supported"
-            if 'nodes' not in config:
-                error = "Not containing a list of nodes"
+            if 'node_names' not in config and type(config['node_names']) == list:
+                error = "Not containing a list of node_names"
         except Exception as e:
             error = f"Some error validating config file: {e}"
         finally:
@@ -148,17 +175,14 @@ class ConfigHandler(QObject):
                 self.message.emit(f"Invalid config file. {error}", "error")
             return error == ''
 
-    def _load_config(self, config: dict) -> bool:
+    def _load_config(self, config: dict) -> Config:
         try:
-            nodes = []
-            for node in config['nodes']:
-                assert type(node) == str, "Node must be a string"
-                nodes.append(node)
-            self.node_list_updated.emit(nodes)
-            return True
+            config_obj = Config.as_payload(config)
+            self.node_list_updated.emit(config_obj.node_names)
+            return config_obj
         except Exception as e:
             self.message.emit(f"Invalid config file. Some error while reading nodes: {e}", "error")
-            return False
+            return None
 
     def _update_recent_list(self, filepath: str):
         settings = QSettings(self.organization, self.app_name)

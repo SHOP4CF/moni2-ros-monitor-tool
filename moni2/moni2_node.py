@@ -3,8 +3,7 @@ import rclpy
 from rclpy.node import Node
 from PyQt5.QtWidgets import QApplication
 from moni2.gui import MonitorWindow
-from moni2.node_info import NodeInfo, Topic, Service
-from std_srvs.srv import SetBool
+from moni2.node_info import NodeInfoHandler
 from rcl_interfaces.msg import Log
 from ament_index_python.packages import get_package_share_directory
 
@@ -16,38 +15,18 @@ class Moni2Node(Node):
         self.get_logger().info(f"Initializing {self.get_name()}...")
 
         self.window = MonitorWindow(self.get_logger().get_child('gui'), get_package_share_directory('moni2'))
-        self.text_service = self.create_service(SetBool, 'set_bool', self.set_bool_callback)
         self.log_sub = self.create_subscription(Log, '/rosout', self.received_log, 10)
-        self.timer = self.create_timer(2.0, self.check_nodes)
+        self.timer = self.create_timer(3.0, self.check_nodes)
+        self.node_info = NodeInfoHandler(self)
 
         self.get_logger().info(f"{self.get_name()} Initialized!")
 
     def check_nodes(self):
-        nodes = self.get_node_names_and_namespaces()
-        print(f"## Nodes: {nodes}")
-        watched_nodes = self.window.update_online_nodes([node for node, _ in nodes])
-        for node, namespace in nodes:
-            if node not in watched_nodes:
-                continue
-            publishers = []
-            subscribers = []
-            services = []
-            clients = []
-            for name, types in self.get_publisher_names_and_types_by_node(node, namespace):
-                publishers.append(Topic(name, types))
-            for name, types in self.get_subscriber_names_and_types_by_node(node, namespace):
-                subscribers.append(Topic(name, types))
-            for name, types in self.get_service_names_and_types_by_node(node, namespace):
-                services.append(Service(name, types))
-            for name, types in self.get_client_names_and_types_by_node(node, namespace):
-                clients.append(Service(name, types))
-            node_info = NodeInfo(node, publishers, subscribers, services, clients)
-            self.window.update_node(node_info)
+        nodes = self.node_info.get_node_names()
+        watched_nodes = self.window.update_online_nodes(nodes)
 
-    def set_bool_callback(self, request: SetBool.Request, response: SetBool.Response):
-        text = "Soo true!" if request.data else "Soo false!"
-        self.window.set_text(text)
-        return response
+        for node in set(watched_nodes).intersection(nodes):
+            self.window.update_node(self.node_info.get_node_info(node))
 
     def received_log(self, log: Log):
         self.window.received_log(log)

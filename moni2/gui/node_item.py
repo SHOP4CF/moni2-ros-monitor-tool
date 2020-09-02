@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (
     QFrame
 )
 from PyQt5.QtCore import Qt, pyqtSlot
-from moni2.node_info import NodeInfo
+from moni2.node_info import NodeInfo, NodeName
 
 
 class HLine(QFrame):
@@ -27,20 +27,23 @@ class HLine(QFrame):
 
 class NodeItem(QWidget):
 
-    def __init__(self, node_name: str, log: logging.Logger, parent: Optional[QWidget] = None):
+    def __init__(self, node_name: NodeName, log: logging.Logger, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.log = log
 
+        self.node_name: NodeName = node_name
         self.node_info: NodeInfo = None
 
         self.status = QLabel("")
-        self.node_name = QLabel(node_name)
+        self.node_name_label = QLabel(node_name.full_name)
         self.n_errors = QLabel("🛑0")
         self.n_warnings = QLabel("⚠0")
         self.publishers: QListWidget = None
         self.subscribers: QListWidget = None
-        self.services: QListWidget = None
-        self.clients: QListWidget = None
+        self.service_server: QListWidget = None
+        self.service_client: QListWidget = None
+        self.action_server: QListWidget = None
+        self.action_client: QListWidget = None
 
         self.init_ui()
 
@@ -49,7 +52,7 @@ class NodeItem(QWidget):
 
         status_layout = QHBoxLayout()
         status_layout.addWidget(self.status)
-        status_layout.addWidget(self.node_name)
+        status_layout.addWidget(self.node_name_label)
         status_layout.addStretch(1)
         status_layout.addWidget(self.n_errors)
         status_layout.addWidget(self.n_warnings)
@@ -63,10 +66,16 @@ class NodeItem(QWidget):
         topic_layout.addLayout(sub_layout)
 
         service_layout = QHBoxLayout()
-        self.services, serv_layout = self._create_list("Services")
-        self.clients, cli_layout = self._create_list("Clients")
+        self.service_server, serv_layout = self._create_list("Service server")
+        self.service_client, cli_layout = self._create_list("Service client")
         service_layout.addLayout(serv_layout)
         service_layout.addLayout(cli_layout)
+
+        action_layout = QHBoxLayout()
+        self.action_server, serv_layout = self._create_list("Action server")
+        self.action_client, cli_layout = self._create_list("Action client")
+        action_layout.addLayout(serv_layout)
+        action_layout.addLayout(cli_layout)
 
         main_layout = QVBoxLayout(self)
         main_layout.addLayout(status_layout)
@@ -74,6 +83,8 @@ class NodeItem(QWidget):
         main_layout.addLayout(topic_layout)
         main_layout.addWidget(HLine(1))
         main_layout.addLayout(service_layout)
+        main_layout.addWidget(HLine(1))
+        main_layout.addLayout(action_layout)
         main_layout.addStretch(10)
 
         self.setLayout(main_layout)
@@ -84,7 +95,7 @@ class NodeItem(QWidget):
 
     @pyqtSlot(NodeInfo)
     def update_node(self, node: NodeInfo):
-        if node.name == self.node_name.text() and self.node_info != node:
+        if node.name == self.node_name and self.node_info != node:
             self.node_info = node
             self.publishers.clear()
             for pub in node.publishers:
@@ -92,12 +103,18 @@ class NodeItem(QWidget):
             self.subscribers.clear()
             for sub in node.subscribers:
                 self.subscribers.addItem(sub.name)
-            self.services.clear()
-            for serv in node.services:
-                self.services.addItem(serv.name)
-            self.clients.clear()
-            for client in node.clients:
-                self.clients.addItem(client.name)
+            self.service_server.clear()
+            for serv in node.service_server:
+                self.service_server.addItem(serv.name)
+            self.service_client.clear()
+            for client in node.service_client:
+                self.service_client.addItem(client.name)
+            self.action_server.clear()
+            for server in node.action_server:
+                self.action_server.addItem(server.name)
+            self.action_client.clear()
+            for client in node.action_client:
+                self.action_client.addItem(client)
 
     def _create_list(self, name: str) -> (QListWidget, QLayout):
         topic_list = QListWidget()
@@ -123,4 +140,4 @@ class NodeItem(QWidget):
         text, color = ("✅", "green") if online else ("❌", "red")
         self.status.setText(text)
         self.status.setStyleSheet(f"color: {color}")
-        self.node_name.setStyleSheet(f"color: {color}")
+        self.node_name_label.setStyleSheet(f"color: {color}")

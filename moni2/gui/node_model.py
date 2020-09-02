@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
     QLabel
 )
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
-from moni2.node_info import NodeInfo
+from moni2.node_info import NodeInfo, NodeName
 from moni2.gui.node_item import NodeItem
 
 
@@ -21,7 +21,7 @@ class NodeModel(QWidget):
 
         self.node_updated_callback = node_updated
 
-        self.nodes: Dict[str, NodeItem] = {}
+        self.nodes: Dict[NodeName, NodeItem] = {}
         self.status_label = QLabel()
         self.layout: QGridLayout = None
         self.cols = 2
@@ -50,20 +50,26 @@ class NodeModel(QWidget):
         self.setLayout(layout)
 
     @pyqtSlot(list)
-    def node_list_updated(self, nodes: [str]):
+    def node_list_updated(self, nodes: [NodeName]):
         self.log.info(f"New list of nodes: {nodes}")
-        for node in self.nodes:
-            # TODO: only delete if removed from list
-            self.nodes[node].deleteLater()
-        self.nodes.clear()
+        obsolete_nodes = set(self.nodes.keys()).difference(nodes)
+        new_nodes = set(nodes).difference(self.nodes.keys())
 
-        position = 0
-        for node in nodes:
-            # TODO: only create if not in self.nodes
-            node_item = NodeItem(node, self.log.get_child(node))
+        while self.layout.count():  # Remove all NodeItems from the layout
+            self.layout.takeAt(0)
+
+        for node in obsolete_nodes:  # delete NodeItems no longer needed
+            self.nodes[node].deleteLater()
+            del self.nodes[node]
+
+        for node in new_nodes:  # create new nodes if needed
+            node_item = NodeItem(node, self.log.get_child(node.name))
             self.node_updated_callback.connect(node_item.update_node)
             self.nodes[node] = node_item
-            self.layout.addWidget(node_item, position//self.cols, position % self.cols)
+
+        position = 0  # insert all NodeItems
+        for node in nodes:
+            self.layout.addWidget(self.nodes[node], position // self.cols, position % self.cols)
             position += 1
 
     @pyqtSlot(str, int)
@@ -77,7 +83,7 @@ class NodeModel(QWidget):
             self.nodes[log_name].set_error_count(warning_count)
 
     @pyqtSlot(list)
-    def online_nodes(self, nodes: [str]):
+    def online_nodes(self, nodes: [NodeName]):
         online = set(self.nodes).intersection(nodes)
         offline = set(self.nodes).difference(nodes)
         self.status_label.setText(f"{len(online)} out of {len(online) + len(offline)} nodes is online")

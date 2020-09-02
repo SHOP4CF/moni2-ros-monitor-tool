@@ -10,7 +10,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
 
 from rcl_interfaces.msg import Log
-from moni2.node_info import NodeInfo
+from moni2.node_info import NodeInfo, NodeName
 from moni2.gui.log_widget import LogWidget
 from moni2.gui.node_model import NodeModel
 from moni2.gui.config_handler import ConfigHandler
@@ -18,7 +18,7 @@ from moni2.gui.config_handler import ConfigHandler
 
 class MonitorWindow(QMainWindow):
 
-    VERSION = "0.0.1"
+    VERSION = "0.1.0"
     APP_NAME = "Moni2"
     ORGANIZATION = "dti.dk"
 
@@ -40,7 +40,7 @@ class MonitorWindow(QMainWindow):
         self.node_model: NodeModel = None
         self.config: ConfigHandler = None
 
-        self.watched_nodes: [str] = []
+        self.watched_nodes: [NodeName] = []
 
         self.init_components()
         self.init_ui()
@@ -103,7 +103,7 @@ class MonitorWindow(QMainWindow):
     def update_node(self, node: NodeInfo):
         self.node_updated.emit(node)
 
-    def update_online_nodes(self, nodes: [str]) -> [str]:
+    def update_online_nodes(self, nodes: [NodeName]) -> [NodeName]:
         self.online_nodes.emit(nodes)
         return self.watched_nodes
 
@@ -120,7 +120,7 @@ class MonitorWindow(QMainWindow):
         self.log.info(message)
 
     @pyqtSlot(list)
-    def node_list_updated(self, nodes: [str]):
+    def node_list_updated(self, nodes: [NodeInfo]):
         self.watched_nodes = nodes
 
     def close_application(self):

@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QListWidget,
+    QListWidgetItem,
     QAbstractItemView,
     QLineEdit,
     QPushButton,
@@ -14,6 +15,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QTimer
+from moni2.node_info import NodeName, parse_node_name
 
 
 class DragListWidget(QListWidget):
@@ -118,7 +120,7 @@ class EditNodeListDialog(QDialog):
         online_layout = QVBoxLayout()
         online_layout.addWidget(QLabel("Online nodes"))
         online_layout.addWidget(self.online_node_list)
-        online_layout.addWidget(QLabel())
+        online_layout.addWidget(QLabel("Drag nodes to select them"))
 
         selected_layout = QVBoxLayout()
         selected_layout.addWidget(QLabel("Selected nodes"))
@@ -133,6 +135,7 @@ class EditNodeListDialog(QDialog):
         delete_node = TrashLabel()
         delete_node.node_deleted.connect(self._delayed_updated_selected_nodes)
         new_node_layout.addWidget(delete_node)
+        new_node_layout.addWidget(QLabel("Drag here to delete"))
         new_node_layout.addStretch(10)
 
         layout = QHBoxLayout()
@@ -164,23 +167,23 @@ class EditNodeListDialog(QDialog):
             self.node_list.takeItem(i)
         self._update_selected_nodes()
 
-    def set_nodes(self, nodes: [str]):
+    def set_nodes(self, nodes: [NodeName]):
         for node in nodes:
-            self.node_list.addItem(node)
+            self._add_node_to_list(self.node_list, node)
         self._update_selected_nodes()
 
-    def selected_nodes(self) -> [str]:
-        return [self.node_list.item(i).text() for i in range(self.node_list.count())]
+    def selected_nodes(self) -> [NodeName]:
+        return [self.node_list.item(i).data(Qt.UserRole) for i in range(self.node_list.count())]
 
     @pyqtSlot(list)
-    def node_updated(self, nodes: [str]):
+    def node_updated(self, nodes: [NodeName]):
         self.online_node_list.clear()
         for node in nodes:
-            self.online_node_list.addItem(node)
+            self._add_node_to_list(self.online_node_list, node)
 
     def _manual_add_node(self):
-        node = self.new_node_input.text()
-        self.node_list.addItem(node)
+        node_name = self.new_node_input.text()
+        self._add_node_to_list(self.node_list, parse_node_name(node_name))
         self.new_node_input.setText("")
         self._update_selected_nodes()
 
@@ -193,3 +196,9 @@ class EditNodeListDialog(QDialog):
         timer.setSingleShot(True)
         timer.timeout.connect(self._update_selected_nodes)
         timer.start(500)
+
+    @staticmethod
+    def _add_node_to_list(list_widget: QListWidget, node: NodeName):
+        item = QListWidgetItem(node.full_name)
+        item.setData(Qt.UserRole, node)
+        list_widget.addItem(item)
