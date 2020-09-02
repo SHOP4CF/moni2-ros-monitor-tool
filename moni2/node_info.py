@@ -101,9 +101,13 @@ class NodeInfoHandler:
         return self.get_topics(node_name, self.node.get_client_names_and_types_by_node, include_hidden)
 
     def get_action_server_info(self, node_name: NodeName, include_hidden=False) -> [TopicInfo]:
-        names_and_types = rclpy.action.get_action_server_names_and_types_by_node(self.node, node_name.name, node_name.namespace)
-        return [TopicInfo(name=name, types=types) for name, types in names_and_types if include_hidden or not self._is_hidden_name(name)]
+        names_and_types = rclpy.action.get_action_server_names_and_types_by_node(
+            self.node, node_name.name, node_name.namespace)
+        return [TopicInfo(name=name, types=types) for name, types in names_and_types
+                if include_hidden or not self._is_hidden_name(name)]
 
     def get_action_client_info(self, node_name: NodeName, include_hidden=False) -> [TopicInfo]:
-        names_and_types = rclpy.action.get_action_client_names_and_types_by_node(self.node, node_name.name, node_name.namespace)
-        return [TopicInfo(name=name, types=types) for name, types in names_and_types if include_hidden or not self._is_hidden_name(name)]
+        names_and_types = rclpy.action.get_action_client_names_and_types_by_node(
+            self.node, node_name.name, node_name.namespace)
+        return [TopicInfo(name=name, types=types) for name, types in names_and_types
+                if include_hidden or not self._is_hidden_name(name)]

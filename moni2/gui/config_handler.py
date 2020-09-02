@@ -142,7 +142,8 @@ class ConfigHandler(QObject):
     def _select_config_file(self) -> str:
         options = QFileDialog.Options()
         file_filter = "Config file (*.json);;All files (*)"
-        filepath, _ = QFileDialog.getOpenFileName(self.parent(), "Find configuration file", "", file_filter, options=options)
+        filepath, _ = QFileDialog.getOpenFileName(self.parent(), "Find configuration file", "", file_filter,
+                                                  options=options)
         self.log.info(f"Configuration file: {filepath}")
         return filepath
 
