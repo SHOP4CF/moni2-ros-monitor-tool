@@ -130,8 +130,9 @@ class ConfigHandler(QObject):
                 self._save_config(self.path)
                 self._open_config(self.path)
                 return
-        self.path = self.old_path
-        self.config = self.old_config
+        if self.old_config:
+            self.path = self.old_path
+            self.config = self.old_config
 
     def _select_save_filepath(self) -> str:
         file_filter = "Config file (*.json);;All files (*)"
