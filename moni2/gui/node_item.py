@@ -114,7 +114,7 @@ class NodeItem(QWidget):
                 self.action_server.addItem(server.name)
             self.action_client.clear()
             for client in node.action_client:
-                self.action_client.addItem(client)
+                self.action_client.addItem(client.name)
 
     def _create_list(self, name: str) -> (QListWidget, QLayout):
         topic_list = QListWidget()
