@@ -15,11 +15,16 @@ class TestLogWidget:
     def setup(self):
         print("Setup")
 
+        self.count = 0
         self.log_widget = LogWidget(logging.getLogger("Test_LogWidget"))
+        self.assert_list(0, 0)
 
     def teardown(self):
         print("Teardown")
         assert self.log_widget
+
+    def counter(self, log: str, count: int):
+        self.count = count
 
     @staticmethod
     def create_log(text: str, level: int) -> Log:
@@ -36,14 +41,28 @@ class TestLogWidget:
         assert self.log_widget
 
     def test_received_log(self):
-        self.assert_list(0, 0)
-
         self.log_widget.received_log(self.create_log("Hello", logging.INFO))
         self.assert_list(1, 1)
 
-    def test_filter(self):
-        self.assert_list(0, 0)
+    def test_receive_log_lower_log_level(self):
+        self.log_widget.received_log(self.create_log("Hello", logging.DEBUG))
+        self.assert_list(total_length=1, view_length=0)
 
+    def test_received_warning_log(self):
+        self.log_widget.warning_counter.connect(self.counter)
+
+        self.log_widget.received_log(self.create_log("Hello", logging.WARNING))
+        self.assert_list(1, 1)
+        assert self.count == 1
+
+    def test_received_error_log(self):
+        self.log_widget.error_counter.connect(self.counter)
+
+        self.log_widget.received_log(self.create_log("Hello", logging.ERROR))
+        self.assert_list(1, 1)
+        assert self.count == 1
+
+    def test_filter(self):
         self.log_widget.received_log(self.create_log("Hello", logging.INFO))
         self.log_widget.received_log(self.create_log("Davs", logging.INFO))
         self.assert_list(2, 2)
