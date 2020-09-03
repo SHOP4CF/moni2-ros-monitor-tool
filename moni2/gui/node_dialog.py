@@ -95,6 +95,7 @@ class EditNodeListDialog(QDialog):
         self.new_node_input = QLineEdit()
         self.new_node_button = QPushButton()
         self.nodes_selected_label = QLabel()
+        self.trash_label = TrashLabel()
 
         self.init_components()
         self.init_ui()
@@ -132,9 +133,8 @@ class EditNodeListDialog(QDialog):
         new_node_layout.addWidget(self.new_node_input)
         new_node_layout.addWidget(self.new_node_button)
         new_node_layout.addSpacing(20)
-        delete_node = TrashLabel()
-        delete_node.node_deleted.connect(self._delayed_updated_selected_nodes)
-        new_node_layout.addWidget(delete_node)
+        self.trash_label.node_deleted.connect(self._delayed_updated_selected_nodes)
+        new_node_layout.addWidget(self.trash_label)
         new_node_layout.addWidget(QLabel("Drag here to delete"))
         new_node_layout.addStretch(10)
 
