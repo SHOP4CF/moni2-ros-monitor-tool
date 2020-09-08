@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
     QLabel
 )
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
-from moni2.node_info import NodeInfo, NodeName
+from moni2.node_info import NodeInfo, NodeName, parse_node_name
 from moni2.gui.node_item import NodeItem
 from moni2.gui.settings_handler import SettingsHandler
 
@@ -79,13 +79,15 @@ class NodeModel(QWidget):
 
     @pyqtSlot(str, int)
     def log_warning_count(self, log_name: str, warning_count: int):
-        if log_name in self.nodes:
-            self.nodes[log_name].set_warning_count(warning_count)
+        node_name = parse_node_name(log_name)
+        if node_name in self.nodes:
+            self.nodes[node_name].set_warning_count(warning_count)
 
     @pyqtSlot(str, int)
     def log_error_count(self, log_name: str, warning_count: int):
-        if log_name in self.nodes:
-            self.nodes[log_name].set_error_count(warning_count)
+        node_name = parse_node_name(log_name)
+        if node_name in self.nodes:
+            self.nodes[node_name].set_error_count(warning_count)
 
     @pyqtSlot(list)
     def online_nodes(self, nodes: [NodeName]):
