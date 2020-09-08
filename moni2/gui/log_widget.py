@@ -16,6 +16,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QContextMenuEvent, QIcon, QColor
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
+from moni2.gui.settings_handler import SettingsHandler
 
 
 class LogWidget(QDockWidget):
@@ -24,6 +25,12 @@ class LogWidget(QDockWidget):
                  logging.WARNING: "WARN ",
                  logging.ERROR: "ERROR",
                  logging.FATAL: "FATAL"}
+
+    LOG_LEVEL = {"DEBUG": logging.DEBUG,
+                 "INFO": logging.INFO,
+                 "WARNING": logging.WARNING,
+                 "ERROR": logging.ERROR,
+                 "FATAL": logging.FATAL}
 
     LOG_COLOR = {
         logging.DEBUG: QColor("white"),
@@ -36,11 +43,12 @@ class LogWidget(QDockWidget):
     warning_counter = pyqtSignal(str, int)
     error_counter = pyqtSignal(str, int)
 
-    def __init__(self, log: logging.Logger, parent: Optional[QWidget] = None):
+    def __init__(self, log: logging.Logger, settings: SettingsHandler, parent: Optional[QWidget] = None):
         super().__init__("Log", parent)
         self.log = log
+        self.settings = settings
 
-        self.log_level = logging.INFO
+        self.log_level = self.LOG_LEVEL[self.settings.default_log_level()]
         self.log_list = []
 
         self.warning_count = defaultdict(int)
@@ -139,3 +147,7 @@ class LogWidget(QDockWidget):
                     for log in self.log_list:
                         if self.log_level <= log.level:
                             self._insert_log(log)
+
+    @pyqtSlot()
+    def settings_changed(self):
+        pass
