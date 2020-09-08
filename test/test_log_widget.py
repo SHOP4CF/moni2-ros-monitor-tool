@@ -8,6 +8,12 @@ from PyQt5.QtWidgets import QApplication
 app = QApplication(sys.argv)
 
 
+class FakeSettingsHandler:
+
+    def default_log_level(self) -> str:
+        return 'INFO'
+
+
 class TestLogWidget:
 
     log_widget: LogWidget
@@ -16,7 +22,7 @@ class TestLogWidget:
         print("Setup")
 
         self.count = 0
-        self.log_widget = LogWidget(logging.getLogger("Test_LogWidget"))
+        self.log_widget = LogWidget(logging.getLogger("Test_LogWidget"), FakeSettingsHandler())
         self.assert_list(0, 0)
 
     def teardown(self):

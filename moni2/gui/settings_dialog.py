@@ -108,5 +108,5 @@ class SettingsDialog(QDialog):
             columns = int(value)
             if 9 >= columns >= 1:
                 self.settings.set_columns(columns)
-        except ValueError as _:
+        except ValueError:
             pass
