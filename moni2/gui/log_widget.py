@@ -139,6 +139,12 @@ class LogWidget(QDockWidget):
                 self.log.info("Clear list")
                 self.log_list.clear()
                 self.log_list_view.clear()
+                for log in self.warning_count:
+                    self.warning_counter.emit(log, 0)
+                self.warning_count.clear()
+                for log in self.error_count:
+                    self.error_counter.emit(log, 0)
+                self.error_count.clear()
             elif action == search_action:
                 self.log.info("Search")
                 self.filter_input.setHidden(False)
