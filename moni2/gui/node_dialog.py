@@ -84,7 +84,6 @@ class TrashLabel(QLabel):
 
 
 class EditNodeListDialog(QDialog):
-    node_list_updated = pyqtSignal(list)
 
     def __init__(self, log: logging.Logger, parent: Optional[QWidget] = None):
         super().__init__(parent)
