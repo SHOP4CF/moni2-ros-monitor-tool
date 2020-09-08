@@ -95,11 +95,13 @@ class LogWidget(QDockWidget):
         if self.log_level <= log.level:
             self._insert_log(log)
         if log.level == logging.WARNING:
-            self.warning_count[log.name] += 1
-            self.warning_counter.emit(log.name, self.warning_count[log.name])
+            parent_log = log.name.split('.')[0]
+            self.warning_count[parent_log] += 1
+            self.warning_counter.emit(parent_log, self.warning_count[parent_log])
         if log.level >= logging.ERROR:
-            self.error_count[log.name] += 1
-            self.error_counter.emit(log.name, self.error_count[log.name])
+            parent_log = log.name.split('.')[0]
+            self.error_count[parent_log] += 1
+            self.error_counter.emit(parent_log, self.error_count[parent_log])
 
     @pyqtSlot(str)
     def on_filter_text_changed(self, text):
