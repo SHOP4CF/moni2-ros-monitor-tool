@@ -14,6 +14,8 @@ from moni2.node_info import NodeInfo, NodeName
 from moni2.gui.log_widget import LogWidget
 from moni2.gui.node_model import NodeModel
 from moni2.gui.config_handler import ConfigHandler
+from moni2.gui.settings_handler import SettingsHandler
+from moni2.gui.settings_dialog import SettingsDialog
 
 
 class MonitorWindow(QMainWindow):
@@ -36,6 +38,8 @@ class MonitorWindow(QMainWindow):
         self.log = log
         self.image_path = image_path
 
+        self.settings = SettingsHandler(self.log.get_child("LogWidget"), self.ORGANIZATION, self.APP_NAME, self)
+
         self.log_widget: LogWidget = None
         self.node_model: NodeModel = None
         self.config: ConfigHandler = None
@@ -49,10 +53,12 @@ class MonitorWindow(QMainWindow):
         self.config.open_recent()
 
     def init_components(self):
-        self.log_widget = LogWidget(self.log.get_child("LogWidget"), self)
-        self.node_model = NodeModel(self.log.get_child("NodeModel"), self.node_updated, self)
+        self.log_widget = LogWidget(self.log.get_child("LogWidget"), self.settings, self)
+        self.node_model = NodeModel(self.log.get_child("NodeModel"), self.settings, self.node_updated, self)
         self.config = ConfigHandler(self.log.get_child("ConfigHandler"),
                                     self.ORGANIZATION, self.APP_NAME, self.VERSION, self)
+
+        self.settings.settings_changed.connect(self.node_model.settings_changed)
 
         self.log_widget.warning_counter.connect(self.node_model.log_warning_count)
         self.log_widget.error_counter.connect(self.node_model.log_error_count)
@@ -85,7 +91,8 @@ class MonitorWindow(QMainWindow):
         self.config.create_menu(file_menu)
         file_menu.addSeparator()
         settings_action = QAction(QIcon.fromTheme('preferences-other'), 'Settings', file_menu)
-        settings_action.triggered.connect(lambda: self.message("TODO"))
+        settings_action.triggered.connect(self.show_settings_dialog)
+        settings_action.setShortcut("Ctrl+Alt+S")
         file_menu.addAction(settings_action)
         file_menu.addSeparator()
         exit_action = QAction(QIcon.fromTheme('application-exit'), "&Quit", file_menu)
@@ -122,6 +129,10 @@ class MonitorWindow(QMainWindow):
     @pyqtSlot(list)
     def node_list_updated(self, nodes: [NodeInfo]):
         self.watched_nodes = nodes
+
+    def show_settings_dialog(self):
+        dialog = SettingsDialog(self.log.get_child("SettingsDialog"), self.settings, self)
+        dialog.exec()
 
     def close_application(self):
         self.message("Closing the application")

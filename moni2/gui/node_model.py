@@ -11,20 +11,25 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
 from moni2.node_info import NodeInfo, NodeName
 from moni2.gui.node_item import NodeItem
+from moni2.gui.settings_handler import SettingsHandler
 
 
 class NodeModel(QWidget):
 
-    def __init__(self, log: logging.Logger, node_updated: pyqtSignal(NodeInfo), parent: Optional[QWidget] = None):
+    def __init__(self, log: logging.Logger,
+                 settings: SettingsHandler,
+                 node_updated: pyqtSignal(NodeInfo),
+                 parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.log = log
+        self.settings = settings
 
         self.node_updated_callback = node_updated
 
         self.nodes: Dict[NodeName, NodeItem] = {}
         self.status_label = QLabel()
         self.layout: QGridLayout = None
-        self.cols = 2
+        self.columns = self.settings.columns()
 
         self.init_components()
         self.init_ui()
@@ -51,7 +56,7 @@ class NodeModel(QWidget):
 
     @pyqtSlot(list)
     def node_list_updated(self, nodes: [NodeName]):
-        self.log.info(f"New list of nodes: {nodes}")
+        self.log.info(f"New list of nodes: {[node.full_name for node in nodes]}")
         obsolete_nodes = set(self.nodes.keys()).difference(nodes)
         new_nodes = set(nodes).difference(self.nodes.keys())
 
@@ -69,7 +74,7 @@ class NodeModel(QWidget):
 
         position = 0  # insert all NodeItems
         for node in nodes:
-            self.layout.addWidget(self.nodes[node], position // self.cols, position % self.cols)
+            self.layout.addWidget(self.nodes[node], position // self.columns, position % self.columns)
             position += 1
 
     @pyqtSlot(str, int)
@@ -91,3 +96,9 @@ class NodeModel(QWidget):
             self.nodes[node].set_online(False)
         for node in online:
             self.nodes[node].set_online(True)
+
+    @pyqtSlot()
+    def settings_changed(self):
+        if self.columns != self.settings.columns():
+            self.columns = self.settings.columns()
+            self.node_list_updated(self.nodes.keys())
