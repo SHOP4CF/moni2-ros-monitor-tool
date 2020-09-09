@@ -4,7 +4,43 @@ from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal, QSettings
 
 
-class SettingsHandler(QObject):
+class SettingsReader:
+
+    def columns(self) -> int:
+        raise NotImplementedError("Implement in subclass")
+
+    def hide_parameter_services(self) -> bool:
+        raise NotImplementedError("Implement in subclass")
+
+    def hide_moni2_logs(self) -> bool:
+        raise NotImplementedError("Implement in subclass")
+
+    def hide_unmonitored_nodes(self) -> bool:
+        raise NotImplementedError("Implement in subclass")
+
+    def default_log_level(self) -> str:
+        raise NotImplementedError("Implement in subclass")
+
+
+class SettingsWriter:
+
+    def set_columns(self, columns: int):
+        raise NotImplementedError("Implement in subclass")
+
+    def set_hide_parameter_services(self, hide: bool):
+        raise NotImplementedError("Implement in subclass")
+
+    def set_hide_moni2_logs(self, hide: bool):
+        raise NotImplementedError("Implement in subclass")
+
+    def set_hide_unmonitored_nodes(self, hide: bool):
+        raise NotImplementedError("Implement in subclass")
+
+    def set_default_log_level(self, level: str):
+        raise NotImplementedError("Implement in subclass")
+
+
+class SettingsHandler(QObject, SettingsReader, SettingsWriter):
 
     settings_changed = pyqtSignal()
 
