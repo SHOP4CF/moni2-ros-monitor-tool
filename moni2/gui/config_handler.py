@@ -67,7 +67,7 @@ class ConfigHandler(QObject):
         self.edit_action: QAction = None
 
     def open_recent(self):
-        settings = QSettings(self.organization, self.app_name)
+        settings = self._get_settings()
         filepath = settings.value(self.KEY_LAST_CONFIG, '')
         if filepath:
             self._open_config(filepath)
@@ -162,13 +162,13 @@ class ConfigHandler(QObject):
     def _validate_config_file(self, config: dict) -> bool:
         error = ""
         try:
-            if 'organization' in config and config['organization'] != self.organization:
+            if 'organization' not in config or config['organization'] != self.organization:
                 error = "Wrong organization"
-            if 'application' in config and config['application'] != self.app_name:
+            if 'app_name' not in config or config['app_name'] != self.app_name:
                 error = "Wrong application"
-            if 'version' in config and version.parse(config['version']).minor < version.parse(self.version).minor:
+            if 'version' not in config or version.parse(config['version']).minor < version.parse(self.version).minor:
                 error = "Version is not supported"
-            if 'node_names' not in config and type(config['node_names']) == list:
+            if 'node_names' not in config or type(config['node_names']) != list:
                 error = "Not containing a list of node_names"
         except Exception as e:
             error = f"Some error validating config file: {e}"
@@ -187,7 +187,7 @@ class ConfigHandler(QObject):
             return None
 
     def _update_recent_list(self, filepath: str):
-        settings = QSettings(self.organization, self.app_name)
+        settings = self._get_settings()
         settings.setValue(self.KEY_LAST_CONFIG, filepath)
         recent_paths = settings.value(self.KEY_RECENT_CONFIGS, [])
         recent_paths = deque(recent_paths, maxlen=5)
@@ -198,7 +198,7 @@ class ConfigHandler(QObject):
         self._update_recent_config_menu()
 
     def _update_recent_config_menu(self):
-        settings = QSettings(self.organization, self.app_name)
+        settings = self._get_settings()
         recent_config_paths = settings.value(self.KEY_RECENT_CONFIGS, [])
         self.recent_menu.clear()
         for recent_path in recent_config_paths:
@@ -239,3 +239,6 @@ class ConfigHandler(QObject):
         self.edit_action.triggered.connect(self._edit_config)
         self.edit_action.setEnabled(False)
         menu.addAction(self.edit_action)
+
+    def _get_settings(self) -> QSettings:
+        return QSettings(self.organization, self.app_name)
