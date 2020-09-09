@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QContextMenuEvent, QIcon, QColor
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
-from moni2.gui.settings_handler import SettingsHandler
+from moni2.gui.settings_handler import SettingsReader
 
 
 class LogWidget(QDockWidget):
@@ -43,7 +43,7 @@ class LogWidget(QDockWidget):
     warning_counter = pyqtSignal(str, int)
     error_counter = pyqtSignal(str, int)
 
-    def __init__(self, log: logging.Logger, settings: SettingsHandler, parent: Optional[QWidget] = None):
+    def __init__(self, log: logging.Logger, settings: SettingsReader, parent: Optional[QWidget] = None):
         super().__init__("Log", parent)
         self.log = log
         self.settings = settings

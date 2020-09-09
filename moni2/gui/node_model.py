@@ -11,13 +11,13 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
 from moni2.node_info import NodeInfo, NodeName, parse_node_name
 from moni2.gui.node_item import NodeItem
-from moni2.gui.settings_handler import SettingsHandler
+from moni2.gui.settings_handler import SettingsReader
 
 
 class NodeModel(QWidget):
 
     def __init__(self, log: logging.Logger,
-                 settings: SettingsHandler,
+                 settings: SettingsReader,
                  node_updated: pyqtSignal(NodeInfo),
                  parent: Optional[QWidget] = None):
         super().__init__(parent)
