@@ -87,10 +87,9 @@ class SettingsDialog(QDialog):
         log_layout.addWidget(self.default_log_level)
         log_layout.addStretch(1)
 
-        button = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        button = QDialogButtonBox.Ok
         button_box = QDialogButtonBox(button)
         button_box.accepted.connect(self.accept)
-        button_box.rejected.connect(self.reject)
 
         layout = QHBoxLayout()
         layout.addLayout(ui_layout)
