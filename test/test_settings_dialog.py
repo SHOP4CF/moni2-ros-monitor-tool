@@ -11,6 +11,7 @@ class FakeSettings(SettingsWriter, SettingsReader):
 
     def __init__(self):
         self.cols = 2
+        self.hide_pub = False
         self.hide_param = False
         self.hide_moni2 = False
         self.hide_unmonitored = False
@@ -21,6 +22,12 @@ class FakeSettings(SettingsWriter, SettingsReader):
 
     def set_hide_parameter_services(self, hide: bool):
         self.hide_param = hide
+
+    def set_hide_default_publishers(self, hide: bool):
+        self.hide_pub = hide
+
+    def hide_default_publishers(self) -> bool:
+        return self.hide_pub
 
     def set_hide_moni2_logs(self, hide: bool):
         self.hide_moni2 = hide
@@ -75,6 +82,10 @@ class TestSettingsDialog:
 
         self.settings_dialog.columns.setText("a")
         assert self.fake_settings.columns() == 2
+
+    def test_hide_publishers(self):
+        self.settings_dialog.hide_default_publishers.setChecked(True)
+        assert self.fake_settings.hide_default_publishers()
 
     def test_set_hide_param(self):
         self.settings_dialog.hide_parameter_services.setChecked(True)
