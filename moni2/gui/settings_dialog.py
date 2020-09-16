@@ -29,6 +29,9 @@ class SettingsDialog(QDialog):
         # Layout
         self.columns = QLineEdit("")
 
+        # Publishers
+        self.hide_default_publishers = QCheckBox("Hide default publishers")
+
         # Services
         self.hide_parameter_services = QCheckBox("Hide parameter services")
 
@@ -48,6 +51,10 @@ class SettingsDialog(QDialog):
         self.columns.setValidator(QIntValidator(1, 9))
         self.columns.setText(f"{self.settings.columns()}")
         self.columns.textChanged[str].connect(self._columns_changed)
+
+        self.hide_default_publishers.setChecked(self.settings.hide_default_publishers())
+        self.hide_default_publishers.stateChanged.connect(
+            lambda hide: self.settings.set_hide_default_publishers(hide))
 
         self.hide_parameter_services.setChecked(self.settings.hide_parameter_services())
         self.hide_parameter_services.stateChanged.connect(
@@ -74,10 +81,11 @@ class SettingsDialog(QDialog):
         ui_layout.addLayout(ui_columns_layout)
         ui_layout.addStretch(1)
 
-        service_layout = QVBoxLayout()
-        service_layout.addWidget(QLabel("Services"))
-        service_layout.addWidget(self.hide_parameter_services)
-        service_layout.addStretch(1)
+        topics_layout = QVBoxLayout()
+        topics_layout.addWidget(QLabel("Topics"))
+        topics_layout.addWidget(self.hide_default_publishers)
+        topics_layout.addWidget(self.hide_parameter_services)
+        topics_layout.addStretch(1)
 
         log_layout = QVBoxLayout()
         log_layout.addWidget(QLabel("Logging"))
@@ -93,7 +101,7 @@ class SettingsDialog(QDialog):
 
         layout = QHBoxLayout()
         layout.addLayout(ui_layout)
-        layout.addLayout(service_layout)
+        layout.addLayout(topics_layout)
         layout.addLayout(log_layout)
 
         main_layout = QVBoxLayout()

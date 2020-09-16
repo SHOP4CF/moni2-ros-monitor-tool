@@ -9,6 +9,9 @@ class SettingsReader:
     def columns(self) -> int:
         raise NotImplementedError("Implement in subclass")
 
+    def hide_default_publishers(self) -> bool:
+        raise NotImplementedError("Implement in subclass")
+
     def hide_parameter_services(self) -> bool:
         raise NotImplementedError("Implement in subclass")
 
@@ -25,6 +28,9 @@ class SettingsReader:
 class SettingsWriter:
 
     def set_columns(self, columns: int):
+        raise NotImplementedError("Implement in subclass")
+
+    def set_hide_default_publishers(self, hide: bool):
         raise NotImplementedError("Implement in subclass")
 
     def set_hide_parameter_services(self, hide: bool):
@@ -45,6 +51,7 @@ class SettingsHandler(QObject, SettingsReader, SettingsWriter):
     settings_changed = pyqtSignal()
 
     KEY_COLUMNS = 'columns'
+    KEY_HIDE_DEFAULT_PUBLISHERS = 'hide_default_publishers'
     KEY_HIDE_PARAMETER_TOPIC = 'hide_parameter_services'
     KEY_HIDE_MONI2_LOGS = 'hide_moni2_logs'
     KEY_HIDE_UNMONITORED_NODES = 'hide_unmonitored_nodes'
@@ -64,6 +71,13 @@ class SettingsHandler(QObject, SettingsReader, SettingsWriter):
 
     def set_columns(self, columns: int):
         self.settings.setValue(self.KEY_COLUMNS, columns)
+        self.settings_changed.emit()
+
+    def hide_default_publishers(self) -> bool:
+        return self.settings.value(self.KEY_HIDE_DEFAULT_PUBLISHERS, False, bool)
+
+    def set_hide_default_publishers(self, hide: bool):
+        self.settings.setValue(self.KEY_HIDE_DEFAULT_PUBLISHERS, hide)
         self.settings_changed.emit()
 
     def hide_parameter_services(self) -> bool:
