@@ -59,6 +59,7 @@ class MonitorWindow(QMainWindow):
                                     self.ORGANIZATION, self.APP_NAME, self.VERSION, self)
 
         self.settings.settings_changed.connect(self.node_model.settings_changed)
+        self.settings.settings_changed.connect(self.log_widget.settings_changed)
 
         self.log_widget.warning_counter.connect(self.node_model.log_warning_count)
         self.log_widget.error_counter.connect(self.node_model.log_error_count)
@@ -68,6 +69,7 @@ class MonitorWindow(QMainWindow):
         self.config.message.connect(self.message)
         self.config.node_list_updated.connect(self.node_model.node_list_updated)
         self.config.node_list_updated.connect(self.node_list_updated)
+        self.config.node_list_updated.connect(self.log_widget.node_list_updated)
 
     def init_ui(self):
         self.log.info("Initializing UI...")

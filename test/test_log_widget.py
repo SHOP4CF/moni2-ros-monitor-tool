@@ -1,14 +1,21 @@
 import sys
 import logging
-from moni2.gui.log_widget import LogWidget
 from rcl_interfaces.msg import Log
-
 from PyQt5.QtWidgets import QApplication
+
+from moni2.gui.log_widget import LogWidget
+from moni2.gui.settings_handler import SettingsReader
 
 app = QApplication(sys.argv)
 
 
-class FakeSettingsHandler:
+class FakeSettingsHandler(SettingsReader):
+
+    def hide_unmonitored_nodes(self) -> bool:
+        return False
+
+    def hide_moni2_logs(self) -> bool:
+        return False
 
     def default_log_level(self) -> str:
         return 'INFO'

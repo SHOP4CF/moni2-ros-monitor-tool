@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QContextMenuEvent, QIcon, QColor
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
 from moni2.gui.settings_handler import SettingsReader
+from moni2.node_info import NodeName
 
 
 class LogWidget(QDockWidget):
@@ -50,6 +51,7 @@ class LogWidget(QDockWidget):
 
         self.log_level = self.LOG_LEVEL[self.settings.default_log_level()]
         self.log_list = []
+        self.watched_nodes: [str] = []
 
         self.warning_count = defaultdict(int)
         self.error_count = defaultdict(int)
@@ -84,6 +86,12 @@ class LogWidget(QDockWidget):
         self.setWidget(main_widget)
 
     def _insert_log(self, log: Log):
+        parent_log = log.name.split('.')[0]
+        if log.level < self.log_level or \
+           (self.settings.hide_moni2_logs() and parent_log == "moni2") or \
+           (self.settings.hide_unmonitored_nodes() and parent_log not in self.watched_nodes):
+            # TODO: add self.filter_text
+            return
         text = f'[{self.LOG_LABEL[log.level]}] [{log.name}]: {log.msg}'
         item = QListWidgetItem(text)
         item.setBackground(self.LOG_COLOR[log.level])
@@ -151,11 +159,21 @@ class LogWidget(QDockWidget):
             else:
                 if self.log_level != action.data():
                     self.log_level = action.data()
-                    self.log_list_view.clear()
-                    for log in self.log_list:
-                        if self.log_level <= log.level:
-                            self._insert_log(log)
+                    self._update_log_list()
+
+    def _update_log_list(self):
+        self.log_list_view.clear()
+        for log in self.log_list:
+            self._insert_log(log)
+
+    @pyqtSlot(list)
+    def node_list_updated(self, nodes: [NodeName]):
+        self.log.debug(f"New list of nodes: {[node.name for node in nodes]}")
+        self.watched_nodes = [node.name for node in nodes]
+        if self.settings.hide_unmonitored_nodes():
+            self._update_log_list()
 
     @pyqtSlot()
     def settings_changed(self):
-        pass
+        self.log.info("Settings changed")
+        self._update_log_list()
