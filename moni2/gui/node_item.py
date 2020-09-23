@@ -3,16 +3,16 @@ from typing import Optional
 from PyQt5.QtWidgets import (
     QWidget,
     QLabel,
-    QListWidget,
     QHBoxLayout,
     QVBoxLayout,
-    QAbstractItemView,
-    QLayout,
-    QListView,
-    QFrame
+    QFrame,
+    QTreeWidget,
+    QTreeWidgetItem,
 )
 from PyQt5.QtCore import Qt, pyqtSlot
-from moni2.node_info import NodeInfo, NodeName
+from PyQt5.QtGui import QFont
+from moni2.node_info import NodeInfo, NodeName, TopicInfo
+from moni2.gui.settings_handler import SettingsReader
 
 
 class HLine(QFrame):
@@ -27,9 +27,19 @@ class HLine(QFrame):
 
 class NodeItem(QWidget):
 
-    def __init__(self, node_name: NodeName, log: logging.Logger, parent: Optional[QWidget] = None):
+    DEFAULT_PUBLISHERS = ['/rosout', '/parameter_events']
+    DEFAULT_SERVICES = ['/describe_parameters', '/get_parameter_types',
+                        '/get_parameters', '/list_parameters',
+                        '/set_parameters', '/set_parameters_atomically']
+
+    def __init__(self,
+                 node_name: NodeName,
+                 log: logging.Logger,
+                 settings: SettingsReader,
+                 parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.log = log
+        self.settings = settings
 
         self.node_name: NodeName = node_name
         self.node_info: NodeInfo = None
@@ -38,17 +48,15 @@ class NodeItem(QWidget):
         self.node_name_label = QLabel(node_name.full_name)
         self.n_errors = QLabel("🛑0")
         self.n_warnings = QLabel("⚠0")
-        self.publishers: QListWidget = None
-        self.subscribers: QListWidget = None
-        self.service_server: QListWidget = None
-        self.service_client: QListWidget = None
-        self.action_server: QListWidget = None
-        self.action_client: QListWidget = None
+        self.topics: QTreeWidget = None
 
         self.init_ui()
 
     def init_ui(self):
         self.log.info("Initializing UI...")
+        font = QFont("ubuntu", 15, QFont.Bold)
+        for label in [self.status, self.node_name_label, self.n_errors, self.n_warnings]:
+            label.setFont(font)
 
         status_layout = QHBoxLayout()
         status_layout.addWidget(self.status)
@@ -59,76 +67,48 @@ class NodeItem(QWidget):
         self.n_errors.setStyleSheet("color: #a64452")
         self.n_warnings.setStyleSheet("color: #FFBF00")
 
-        topic_layout = QHBoxLayout()
-        self.publishers, pub_layout = self._create_list("Publishers")
-        self.subscribers, sub_layout = self._create_list("Subscribers")
-        topic_layout.addLayout(pub_layout)
-        topic_layout.addLayout(sub_layout)
-
-        service_layout = QHBoxLayout()
-        self.service_server, serv_layout = self._create_list("Service server")
-        self.service_client, cli_layout = self._create_list("Service client")
-        service_layout.addLayout(serv_layout)
-        service_layout.addLayout(cli_layout)
-
-        action_layout = QHBoxLayout()
-        self.action_server, serv_layout = self._create_list("Action server")
-        self.action_client, cli_layout = self._create_list("Action client")
-        action_layout.addLayout(serv_layout)
-        action_layout.addLayout(cli_layout)
+        self.topics = QTreeWidget()
+        self.topics.setHeaderLabel("Topics")
 
         main_layout = QVBoxLayout(self)
         main_layout.addLayout(status_layout)
         main_layout.addWidget(HLine())
-        main_layout.addLayout(topic_layout)
-        main_layout.addWidget(HLine(1))
-        main_layout.addLayout(service_layout)
-        main_layout.addWidget(HLine(1))
-        main_layout.addLayout(action_layout)
-        main_layout.addStretch(10)
+        main_layout.addWidget(self.topics)
 
         self.setLayout(main_layout)
         self.setObjectName("NodeItem")
         self.setAttribute(Qt.WA_StyledBackground, True)
-        self.setStyleSheet("background-color: #dddddd; border-radius: 10px;")
+        self.setStyleSheet("background-color: #dddddd; border-radius: 15px;")
         self.adjustSize()
 
     @pyqtSlot(NodeInfo)
     def update_node(self, node: NodeInfo):
         if node.name == self.node_name and self.node_info != node:
             self.node_info = node
-            self.publishers.clear()
-            for pub in node.publishers:
-                self.publishers.addItem(pub.name)
-            self.subscribers.clear()
-            for sub in node.subscribers:
-                self.subscribers.addItem(sub.name)
-            self.service_server.clear()
-            for serv in node.service_server:
-                self.service_server.addItem(serv.name)
-            self.service_client.clear()
-            for client in node.service_client:
-                self.service_client.addItem(client.name)
-            self.action_server.clear()
-            for server in node.action_server:
-                self.action_server.addItem(server.name)
-            self.action_client.clear()
-            for client in node.action_client:
-                self.action_client.addItem(client.name)
+            self.update_ui()
 
-    def _create_list(self, name: str) -> (QListWidget, QLayout):
-        topic_list = QListWidget()
-        topic_list.setSelectionMode(QAbstractItemView.NoSelection)
-        topic_list.setResizeMode(QListView.Adjust)
-        topic_list.setStyleSheet("QListView{border:none}")
-        topic_list.setUniformItemSizes(True)
-        topic_list.addItem("None")
+    def update_ui(self):
+        self.topics.clear()
 
-        layout = QVBoxLayout()
-        layout.addWidget(QLabel(name))
-        layout.addWidget(topic_list)
+        self._insert_topics("Publishers", self.node_info.publishers)
+        self._insert_topics("Subscribers", self.node_info.subscribers)
+        self._insert_topics("Service servers", self.node_info.service_server)
+        self._insert_topics("Service clients", self.node_info.service_client)
+        self._insert_topics("Action servers", self.node_info.action_server)
+        self._insert_topics("Action clients", self.node_info.action_client)
 
-        return topic_list, layout
+    def _insert_topics(self, title: str, topics: [TopicInfo]):
+        parent = QTreeWidgetItem(self.topics)
+        parent.setText(0, title)
+        for topic in topics:
+            if self.settings.hide_default_publishers() and topic.name in self.DEFAULT_PUBLISHERS:
+                continue
+            if self.settings.hide_parameter_services() and \
+                    topic.name.replace(self.node_name.full_name, '') in self.DEFAULT_SERVICES:
+                continue
+            child = QTreeWidgetItem(parent)
+            child.setText(0, topic.name)
+        parent.setHidden(parent.childCount() == 0)
 
     def set_warning_count(self, count: int):
         self.n_warnings.setText(f"⚠{count}")
@@ -141,3 +121,6 @@ class NodeItem(QWidget):
         self.status.setText(text)
         self.status.setStyleSheet(f"color: {color}")
         self.node_name_label.setStyleSheet(f"color: {color}")
+
+        if not online:
+            self.topics.clear()
