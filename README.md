@@ -39,6 +39,7 @@ The program will look similar to this when you run it:
    * "Selected node" list contains the nodes that will be monitored.
       * you can add nodes by dragging from the "Online nodes" or manually add nodes using the input field to the right.
       * you can drag nodes from the trash-can if you wish to delete them.
+      * you can drag/drop nodes to reorder them. 
 3. **Save configuration**
    * You will be asked to save your configuration somewhere (it is `.json`).
 4. **Have fun!**
