@@ -58,7 +58,7 @@ class LogWidget(QDockWidget):
 
         self.log_list_view = QListWidget()
         self.filter_input = QLineEdit()
-        self.filter_text = ''
+        self.filter_text = '*'
         self.init_components()
         self.init_ui()
         self.log.info("LogWidget initialized!")
@@ -89,8 +89,8 @@ class LogWidget(QDockWidget):
         parent_log = log.name.split('.')[0]
         if log.level < self.log_level or \
            (self.settings.hide_moni2_logs() and parent_log == "moni2") or \
-           (self.settings.hide_unmonitored_nodes() and parent_log not in self.watched_nodes):
-            # TODO: add self.filter_text
+           (self.settings.hide_unmonitored_nodes() and parent_log not in self.watched_nodes) or \
+           not fnmatch.fnmatch(log.name, self.filter_text):
             return
         text = f'[{self.LOG_LABEL[log.level]}] [{log.name}]: {log.msg}'
         item = QListWidgetItem(text)
@@ -114,10 +114,8 @@ class LogWidget(QDockWidget):
     @pyqtSlot(str)
     def on_filter_text_changed(self, text):
         text = f'*{text}*' if text else "*"
-        for row in range(self.log_list_view.count()):
-            item = self.log_list_view.item(row)
-            item.setHidden(not fnmatch.fnmatch(item.text(), text))
         self.filter_text = text
+        self._update_log_list()
 
     def contextMenuEvent(self, event: QContextMenuEvent) -> None:
         # Build menu
