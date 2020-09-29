@@ -1,4 +1,7 @@
 # Moni2
+[![pipeline status](http://robotgit.localdom.net/ai-box/applications/moni2/badges/master/pipeline.svg)](http://robotgit.localdom.net/ai-box/applications/moni2/-/commits/master)
+[![coverage report](http://robotgit.localdom.net/ai-box/applications/moni2/badges/master/coverage.svg)](http://robotgit.localdom.net/ai-box/applications/moni2/-/commits/master)
+
 a ROS2/Python3/Qt5 monitoring tool
 
 ## Requirements
