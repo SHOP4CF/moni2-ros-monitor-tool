@@ -1,12 +1,13 @@
 import logging
 from unittest.mock import MagicMock
+from PyQt5.QtWidgets import QMenu
 from moni2.gui.config_handler import ConfigHandler, Config
 from moni2.node_info import parse_node_name
 
 
 def settings_mock():
     def value(key: str, default: str):
-        print("hejsa")
+        print(f"key: {key}, default: {default}")
         return ""
 
     mock = MagicMock()
@@ -89,3 +90,12 @@ class TestConfigHandler:
         config: Config = self.config_handler._load_config(self.config)
         assert config is None
         assert len(self.messages) == 1
+
+    def test_menu(self):
+        menu = QMenu()
+        self.config_handler.create_menu(menu)
+        expected_actions = ["New", "Open", "Open Recent", "Save as", "Edit"]
+        actions = []
+        for action in menu.actions():
+            actions.append(action.text())
+        assert expected_actions == actions, f"Expected actions: {expected_actions}. Actions: {actions}"
