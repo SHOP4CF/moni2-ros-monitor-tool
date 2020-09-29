@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (
     QFrame,
     QTreeWidget,
     QTreeWidgetItem,
+    QTreeWidgetItemIterator
 )
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtGui import QFont
@@ -49,6 +50,7 @@ class NodeItem(QWidget):
         self.n_errors = QLabel("🛑0")
         self.n_warnings = QLabel("⚠0")
         self.topics: QTreeWidget = None
+        self.params: QTreeWidget = None
 
         self.init_ui()
 
@@ -74,6 +76,7 @@ class NodeItem(QWidget):
         main_layout.addLayout(status_layout)
         main_layout.addWidget(HLine())
         main_layout.addWidget(self.topics)
+        main_layout.addWidget(self.params)
 
         self.setLayout(main_layout)
         self.setObjectName("NodeItem")
@@ -88,6 +91,7 @@ class NodeItem(QWidget):
             self.update_ui()
 
     def update_ui(self):
+        self.log.info("Update ui")
         self.topics.clear()
 
         self._insert_topics("Publishers", self.node_info.publishers)
@@ -96,6 +100,17 @@ class NodeItem(QWidget):
         self._insert_topics("Service clients", self.node_info.service_client)
         self._insert_topics("Action servers", self.node_info.action_server)
         self._insert_topics("Action clients", self.node_info.action_client)
+
+        self.params.clear()
+        for param in self.node_info.param_info:
+            param_item = QTreeWidgetItem(self.params)
+            param_item.setText(0, param.name)
+            param_item.setText(1, param.type)
+            param_item.setText(2, f'{param.value}')
+        for i in range(3):
+            self.params.resizeColumnToContents(i)
+
+        self.resize_lists(None)
 
     def _insert_topics(self, title: str, topics: [TopicInfo]):
         parent = QTreeWidgetItem(self.topics)
@@ -124,3 +139,24 @@ class NodeItem(QWidget):
 
         if not online:
             self.topics.clear()
+
+    def resize_lists(self, _):
+        topic_count = self.count_items(self.topics)
+        self.topics.setMinimumHeight(18 * topic_count)
+        param_count = self.count_items(self.params)
+        self.params.setMinimumHeight(18 * param_count)
+        self.setMinimumHeight(self.topics.minimumHeight() + self.params.minimumHeight() + 100)
+
+    @staticmethod
+    def count_items(tree: QTreeWidget):
+        count = 0
+        iterator = QTreeWidgetItemIterator(tree)
+        while iterator.value():
+            item = iterator.value()
+            if item.parent():
+                if item.parent().isExpanded():
+                    count += 1
+            else:
+                count += 1
+            iterator += 1
+        return count
