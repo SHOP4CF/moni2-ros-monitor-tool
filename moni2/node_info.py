@@ -4,6 +4,7 @@ import rclpy.action
 
 NodeName = namedtuple('NodeName', ('name', 'namespace', 'full_name'))
 TopicInfo = namedtuple('Topic', ('name', 'types'))
+ParamInfo = namedtuple('Param', ('name', 'type', 'value'))
 
 
 def parse_node_name(node_name: str) -> 'NodeName':
@@ -24,7 +25,8 @@ class NodeInfo:
                  service_server: [TopicInfo] = None,
                  service_client: [TopicInfo] = None,
                  action_server: [TopicInfo] = None,
-                 action_client: [TopicInfo] = None):
+                 action_client: [TopicInfo] = None,
+                 param_info: [ParamInfo] = None):
         self.name = name
         self.publishers = publishers if publishers else []
         self.subscribers = subscribers if subscribers else []
@@ -32,6 +34,7 @@ class NodeInfo:
         self.service_client = service_client if service_client else []
         self.action_server = action_server if action_server else []
         self.action_client = action_client if action_client else []
+        self.param_info = param_info if param_info else []
 
     def __str__(self) -> str:
         return f"<Node: {self.name}, \n\tpublishers: {self.publishers}\n\tsubscribers: {self.subscribers}" \
@@ -46,7 +49,8 @@ class NodeInfo:
             self.service_server == other.service_server and \
             self.service_client == other.service_client and \
             self.action_server == other.action_server and \
-            self.action_client == other.action_client
+            self.action_client == other.action_client and \
+            self.param_info == other.param_info
 
 
 class NodeInfoHandler:
