@@ -20,7 +20,7 @@ from moni2.gui.settings_dialog import SettingsDialog
 
 class MonitorWindow(QMainWindow):
 
-    VERSION = "0.1.0"
+    VERSION = "0.0.0"
     APP_NAME = "Moni2"
     ORGANIZATION = "dti.dk"
 
@@ -85,6 +85,7 @@ class MonitorWindow(QMainWindow):
         self.setTabPosition(Qt.AllDockWidgetAreas, QTabWidget.North)
 
         self.show()
+        # self.showMaximized()
 
     def init_menu(self):
         self.log.info("Initializing menu...")
