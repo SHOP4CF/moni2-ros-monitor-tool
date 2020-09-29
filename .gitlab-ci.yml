@@ -41,7 +41,7 @@ run_ros_tests:
     - colcon test --pytest-with-coverage
     - colcon test-result --verbose
     - coverage=$(xmllint --html --xpath '/html/body/div[@id="header"]/div/h1/span/text()' ${WS_PATH}/build/moni2/coverage.html/index.html)
-    - echo "coverage: $coverage"
+    - echo "coverage $coverage"
 
   after_script:
     # copy test reports to the project directory, so that we can upload them as artifacts
