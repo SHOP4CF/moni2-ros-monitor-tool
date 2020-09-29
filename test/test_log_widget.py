@@ -40,14 +40,19 @@ class TestLogWidget:
         self.count = count
 
     @staticmethod
-    def create_log(text: str, level: int) -> Log:
+    def create_log(text: str, level: int, name="TestNode") -> Log:
         log = Log()
         log.msg = text
         log.level = level
+        log.name = name
         return log
 
     def assert_list(self, total_length: int, view_length: int):
-        assert len(self.log_widget.log_list) == total_length, f"log_list should have {total_length} elements"
+        print(f"## Expected in list: {total_length}. Expected in view: {view_length}")
+        print(f"Elements in list: {[log.msg for log in self.log_widget.log_list]}")
+        print(f"Elements in view: "
+              f"{[self.log_widget.log_list_view.item(i).text() for i in range(self.log_widget.log_list_view.count())]}")
+        assert len(self.log_widget.log_list) == total_length, f"log_list should have {total_length} elements."
         assert self.log_widget.log_list_view.count() == view_length, f"log_list_view should have {view_length} elements"
 
     def test_init(self):
@@ -77,12 +82,8 @@ class TestLogWidget:
 
     def test_filter(self):
         self.log_widget.received_log(self.create_log("Hello", logging.INFO))
-        self.log_widget.received_log(self.create_log("Davs", logging.INFO))
+        self.log_widget.received_log(self.create_log("Davs", logging.INFO, "RealNode"))
         self.assert_list(2, 2)
 
-        self.log_widget.on_filter_text_changed("av")
-        self.assert_list(2, 2)
-        hidden = 0
-        for row in range(self.log_widget.log_list_view.count()):
-            hidden += self.log_widget.log_list_view.item(row).isHidden()
-        assert hidden == 1, f"1 out of 2 items should be hidden"
+        self.log_widget.on_filter_text_changed("Real")
+        self.assert_list(2, 1)

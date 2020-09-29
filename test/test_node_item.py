@@ -4,9 +4,18 @@ from PyQt5.QtWidgets import QApplication
 
 from moni2.gui.node_item import NodeItem
 from moni2.node_info import parse_node_name, NodeInfo, TopicInfo
-
+from moni2.gui.settings_handler import SettingsReader
 
 app = QApplication(sys.argv)
+
+
+class FakeSettingsHandler(SettingsReader):
+
+    def hide_default_publishers(self) -> bool:
+        return False
+
+    def hide_parameter_services(self) -> bool:
+        return False
 
 
 class TestNodeItem:
@@ -17,7 +26,7 @@ class TestNodeItem:
         print("Setup")
 
         self.node_name = parse_node_name('test_node')
-        self.node_item = NodeItem(self.node_name, logging.getLogger("Test_NodeItems"))
+        self.node_item = NodeItem(self.node_name, logging.getLogger("Test_NodeItems"), FakeSettingsHandler())
 
     def teardown(self):
         print("Teardown")
@@ -48,7 +57,7 @@ class TestNodeItem:
         info = NodeInfo(self.node_name, topic, topic, topic, topic, topic, topic)
         self.node_item.update_node(info)
         assert self.node_item.node_info == info
-        assert self.node_item.action_client.count() == 1
+        assert self.node_item.count_items(self.node_item.topics) == 6
 
     def test_update_node_other_name(self):
         info = NodeInfo(parse_node_name('other_node'))

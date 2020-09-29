@@ -9,7 +9,7 @@ from moni2.node_info import NodeName, ParamInfo
 
 
 class ParamUpdateNode(Node):
-    
+
     def __init__(self, online_watched_nodes: [NodeName], node_params: dict):
         super(ParamUpdateNode, self).__init__("_moni2_param_update")
         self.online_watched_nodes = online_watched_nodes
