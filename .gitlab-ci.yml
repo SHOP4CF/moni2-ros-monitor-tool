@@ -64,7 +64,7 @@ build_image:
     - if: '$CI_COMMIT_TAG != null'
   variables:
     REGISTRY: robotgit.localdom.net:5000/aibox/moni2
-    TAG: 0.0.1
+    TAG: 0.1.0
   before_script:
     - docker info
   script:
