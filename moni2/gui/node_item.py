@@ -71,6 +71,12 @@ class NodeItem(QWidget):
 
         self.topics = QTreeWidget()
         self.topics.setHeaderLabel("Topics")
+        self.topics.itemExpanded.connect(self.resize_lists)
+        self.topics.itemCollapsed.connect(self.resize_lists)
+
+        self.params = QTreeWidget()
+        self.params.setHeaderLabel("Parameters")
+        self.params.setHeaderItem(QTreeWidgetItem(["name", "type", "value"]))
 
         main_layout = QVBoxLayout(self)
         main_layout.addLayout(status_layout)
@@ -93,7 +99,6 @@ class NodeItem(QWidget):
     def update_ui(self):
         self.log.info("Update ui")
         self.topics.clear()
-
         self._insert_topics("Publishers", self.node_info.publishers)
         self._insert_topics("Subscribers", self.node_info.subscribers)
         self._insert_topics("Service servers", self.node_info.service_server)
