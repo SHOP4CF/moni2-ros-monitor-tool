@@ -1,0 +1,75 @@
+stages:
+  - test
+  - deploy
+
+run_ros_tests:
+  stage: test
+  image: robotgit.localdom.net:5000/ros2/foxy-ci:latest
+  variables:
+    WS_PATH: ${CI_BUILDS_DIR}/ros_ws
+    WS_SRC_PATH: ${CI_BUILDS_DIR}/ros_ws/src
+    GIT_CLONE_PATH: ${CI_BUILDS_DIR}/ros_ws/src/${CI_PROJECT_NAME}
+    SRC_DEPENDENCIES_FILE: ${CI_BUILDS_DIR}/ros_ws/src/${CI_PROJECT_NAME}/src_dependencies.rosinstall
+    QT_QPA_PLATFORM: offscreen
+    XDG_RUNTIME_DIR: /tmp
+
+  script:
+    # delete cached workspace contents (as gitlab caches stuff from previous builds)
+    - mv $GIT_CLONE_PATH /tmp/tmp_repo_contents
+    - rm -rf $WS_PATH
+    - mkdir -p $WS_SRC_PATH
+    - mv /tmp/tmp_repo_contents $GIT_CLONE_PATH
+    - cd $GIT_CLONE_PATH
+
+    # Fetch dependencies
+    - >
+      if [ -f "${SRC_DEPENDENCIES_FILE}" ]; then
+      echo "Found source dependencies, installing..."
+        wstool init ${WS_SRC_PATH} ${SRC_DEPENDENCIES_FILE} --shallow
+      else
+        echo "No file for source-dependencies found at ${SRC_DEPENDENCIES_FILE}, skipping."
+      fi
+
+    # install standard dependencies for all ROS packages
+    - rosdep install -q --default-yes --ignore-packages-from-source --from-path ${WS_SRC_PATH}
+
+    # Build
+    - cd ${WS_PATH}
+    - colcon build
+
+    # Test
+    - colcon test --pytest-with-coverage
+    - colcon test-result --verbose
+    - coverage=$(xmllint --html --xpath '/html/body/div[@id="header"]/div/h1/span/text()' ${WS_PATH}/build/moni2/coverage.html/index.html)
+    - echo "coverage: $coverage"
+
+  after_script:
+    # copy test reports to the project directory, so that we can upload them as artifacts
+     - mkdir -p ${CI_PROJECT_DIR}/test_results
+     - cp ${WS_PATH}/build/*/*.xml ${CI_PROJECT_DIR}/test_results
+     - cp -rp ${WS_PATH}/build/*/coverage.html ${CI_PROJECT_DIR}
+  artifacts:
+    paths:
+      - coverage.html
+    # let test results show up in gitlab GUI, see also https://docs.gitlab.com/ee/ci/junit_test_reports.html
+    reports:
+      junit: test_results/pytest.xml
+      cobertura: test_results/coverage.xml
+
+build_image:
+  stage: deploy
+  image: docker:19.03.8
+  rules:
+    # Only build and push image when a new tag is pushed
+    - if: '$CI_COMMIT_TAG != null'
+  variables:
+    REGISTRY: robotgit.localdom.net:5000/aibox/moni2
+    TAG: 0.0.0
+  before_script:
+    - docker info
+  script:
+    - docker build -t $REGISTRY:$TAG -t $REGISTRY:latest .
+    - docker push $REGISTRY:latest
+    - docker push $REGISTRY:$TAG
+  tags:
+    - docker-dind-builder
