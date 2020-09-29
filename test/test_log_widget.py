@@ -1,12 +1,8 @@
-import sys
 import logging
 from rcl_interfaces.msg import Log
-from PyQt5.QtWidgets import QApplication
 
 from moni2.gui.log_widget import LogWidget
 from moni2.gui.settings_handler import SettingsReader
-
-app = QApplication(sys.argv)
 
 
 class FakeSettingsHandler(SettingsReader):

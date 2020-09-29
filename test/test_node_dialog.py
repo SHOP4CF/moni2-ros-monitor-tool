@@ -1,11 +1,7 @@
-import sys
 import logging
 from moni2.gui.node_dialog import EditNodeListDialog
 from moni2.node_info import parse_node_name
-from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt
-
-app = QApplication(sys.argv)
 
 
 class TestNodeDialog:
