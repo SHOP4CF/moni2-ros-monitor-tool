@@ -28,7 +28,7 @@ RUN echo "Building packages..."
 WORKDIR ${WS_PATH}
 RUN . /opt/ros/${ROS_DISTRO}/setup.sh && colcon build
 
-LABEL version="0.0.0"
+LABEL version="0.0.1"
 LABEL ros.distro=${ROS_DISTRO}
 LABEL vcs-url="http://robotgit.localdom.net/ai-box/applications/moni2"
 LABEL maintainer="Rasmus Lunding Henriksen <rlh@teknologisk.dk>"

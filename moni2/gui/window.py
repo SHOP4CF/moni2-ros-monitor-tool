@@ -20,7 +20,7 @@ from moni2.gui.settings_dialog import SettingsDialog
 
 class MonitorWindow(QMainWindow):
 
-    VERSION = "0.0.0"
+    VERSION = "0.0.1"
     APP_NAME = "Moni2"
     ORGANIZATION = "dti.dk"
 

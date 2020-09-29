@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "application": "Moni2",
+  "organization": "dti.dk",
+  "nodes": [
+    {
+      "name": "moni2",
+      "logs": ["log1", "log2"]
+    },
+    {
+      "name": "status_node",
+      "logs": ["log1", "log2"]
+    }
+  ]
+}
