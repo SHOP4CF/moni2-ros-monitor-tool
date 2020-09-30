@@ -1,13 +1,10 @@
-import sys
 import logging
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtCore import pyqtSignal
 
 from moni2.gui.node_model import NodeModel
 from moni2.gui.settings_handler import SettingsReader
 from moni2.node_info import NodeInfo, NodeName, parse_node_name
-
-app = QApplication(sys.argv)
 
 
 class FakeSettingsHandler(SettingsReader):
