@@ -71,7 +71,11 @@ class NodeModel(QWidget):
             del self.nodes[node]
 
         for node in new_nodes:  # create new nodes if needed
-            node_item = NodeItem(node, self.log.get_child(node.name), self.settings)
+            try:
+                log = self.log.getChild(node.name)
+            except AttributeError:
+                log = self.log.get_child(node.name)
+            node_item = NodeItem(node, log, self.settings)
             self.node_updated_callback.connect(node_item.update_node)
             self.nodes[node] = node_item
 

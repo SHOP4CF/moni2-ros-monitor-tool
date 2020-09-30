@@ -53,6 +53,7 @@ class NodeItem(QWidget):
         self.params: QTreeWidget = None
 
         self.init_ui()
+        self.set_online(False)
 
     def init_ui(self):
         self.log.info("Initializing UI...")
