@@ -22,6 +22,9 @@ class NodeModel(QWidget):
                  parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.log = log
+        get_child_method = getattr(self.log, "get_child", None)
+        if callable(get_child_method):
+            setattr(self.log, "getChild", get_child_method)
         self.settings = settings
 
         self.node_updated_callback = node_updated
@@ -71,10 +74,7 @@ class NodeModel(QWidget):
             del self.nodes[node]
 
         for node in new_nodes:  # create new nodes if needed
-            try:
-                log = self.log.getChild(node.name)
-            except AttributeError:
-                log = self.log.get_child(node.name)
+            log = self.log.getChild(node.name)
             node_item = NodeItem(node, log, self.settings)
             self.node_updated_callback.connect(node_item.update_node)
             self.nodes[node] = node_item

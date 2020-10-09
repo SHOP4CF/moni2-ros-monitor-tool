@@ -36,9 +36,14 @@ class MonitorWindow(QMainWindow):
     def __init__(self, log: logging.Logger, image_path: str, parent=None):
         super().__init__(parent)
         self.log = log
+
+        get_child_method = getattr(self.log, "get_child", None)
+        if callable(get_child_method):
+            setattr(self.log, "getChild", get_child_method)
+
         self.image_path = image_path
 
-        self.settings = SettingsHandler(self.log.get_child("LogWidget"), self.ORGANIZATION, self.APP_NAME, self)
+        self.settings = SettingsHandler(self.log.getChild("LogWidget"), self.ORGANIZATION, self.APP_NAME, self)
 
         self.log_widget: LogWidget = None
         self.node_model: NodeModel = None
@@ -53,9 +58,9 @@ class MonitorWindow(QMainWindow):
         self.config.open_recent()
 
     def init_components(self):
-        self.log_widget = LogWidget(self.log.get_child("LogWidget"), self.settings, self)
-        self.node_model = NodeModel(self.log.get_child("NodeModel"), self.settings, self.node_updated, self)
-        self.config = ConfigHandler(self.log.get_child("ConfigHandler"),
+        self.log_widget = LogWidget(self.log.getChild("LogWidget"), self.settings, self)
+        self.node_model = NodeModel(self.log.getChild("NodeModel"), self.settings, self.node_updated, self)
+        self.config = ConfigHandler(self.log.getChild("ConfigHandler"),
                                     self.ORGANIZATION, self.APP_NAME, self.VERSION, self)
 
         self.settings.settings_changed.connect(self.node_model.settings_changed)
@@ -134,7 +139,7 @@ class MonitorWindow(QMainWindow):
         self.watched_nodes = nodes
 
     def show_settings_dialog(self):
-        dialog = SettingsDialog(self.log.get_child("SettingsDialog"), self.settings, self)
+        dialog = SettingsDialog(self.log.getChild("SettingsDialog"), self.settings, self)
         dialog.exec()
 
     def close_application(self):
