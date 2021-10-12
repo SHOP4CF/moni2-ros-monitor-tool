@@ -38,6 +38,7 @@ ENV PACKAGE_NAME="moni2"
 ENV LAUNCHFILE_NAME="moni2.launch.py"
 
 RUN adduser --quiet --disabled-password qtuser
+RUN chown qtuser:qtuser ${WS_PATH}
 
 # Needed for QT to be testable
 # ENV QT_QPA_PLATFORM=offscreen
