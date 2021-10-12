@@ -22,6 +22,8 @@ class Moni2Node(Node):
         self.timer = self.create_timer(3.0, self.check_nodes)
         self.node_info = NodeInfoHandler(self)
 
+        print(self.node_info.get_node_names.__str__)
+
         self.node_params = {}
         self.online_watched_nodes = []
 

@@ -17,6 +17,8 @@ from moni2.gui.config_handler import ConfigHandler
 from moni2.gui.settings_handler import SettingsHandler
 from moni2.gui.settings_dialog import SettingsDialog
 
+from moni2.resources import *
+
 
 class MonitorWindow(QMainWindow):
 
@@ -98,12 +100,12 @@ class MonitorWindow(QMainWindow):
         file_menu = main_menu.addMenu("&File")
         self.config.create_menu(file_menu)
         file_menu.addSeparator()
-        settings_action = QAction(QIcon.fromTheme('preferences-other'), 'Settings', file_menu)
+        settings_action = QAction(QIcon(":/icons/settings.svg"), 'Settings', file_menu)
         settings_action.triggered.connect(self.show_settings_dialog)
         settings_action.setShortcut("Ctrl+Alt+S")
         file_menu.addAction(settings_action)
         file_menu.addSeparator()
-        exit_action = QAction(QIcon.fromTheme('application-exit'), "&Quit", file_menu)
+        exit_action = QAction(QIcon(":/icons/exit.svg"), "&Quit", file_menu)
         exit_action.setShortcut("Ctrl+Q")
         exit_action.setStatusTip("Exit the application")
         exit_action.triggered.connect(self.close_application)

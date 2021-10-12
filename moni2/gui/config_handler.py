@@ -13,6 +13,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QSettings
 from moni2.gui.node_dialog import EditNodeListDialog
 from moni2.node_info import NodeName
 
+from moni2.resources import *
 
 class Config:
     def __init__(self, organization: str, app_name: str, app_version: str, node_names: [NodeName]):
@@ -210,30 +211,30 @@ class ConfigHandler(QObject):
         self.recent_menu.menuAction().setVisible(not self.recent_menu.isEmpty())
 
     def create_menu(self, menu: QMenu):
-        new_action = QAction(QIcon.fromTheme('document-new'), "New", menu)
+        new_action = QAction(QIcon(":/icons/new.svg"), "New", menu)
         new_action.setShortcut(QKeySequence.New)
         new_action.setStatusTip("Create new configuration")
         new_action.triggered.connect(self._new_config)
         menu.addAction(new_action)
 
-        open_action = QAction(QIcon.fromTheme('document-open'), "Open", menu)
+        open_action = QAction(QIcon(":/icons/open.svg"), "Open", menu)
         open_action.setShortcut(QKeySequence.Open)
         open_action.setStatusTip("Open existing configuration")
         open_action.triggered.connect(self._open_config)
         menu.addAction(open_action)
 
         self.recent_menu = QMenu("Open Recent", menu)
-        self.recent_menu.setIcon(QIcon.fromTheme('document-open-recent'))
+        self.recent_menu.setIcon(QIcon(":/icons/recent.svg"))
         menu.addMenu(self.recent_menu)
         self._update_recent_config_menu()
 
-        save_as_action = QAction(QIcon.fromTheme('document-save-as'), "Save as", menu)
+        save_as_action = QAction(QIcon(":/icons/save-as.svg"), "Save as", menu)
         save_as_action.setShortcuts([QKeySequence.Save, QKeySequence.SaveAs])
         save_as_action.setStatusTip("Save configuration")
         save_as_action.triggered.connect(self._save_as_config)
         menu.addAction(save_as_action)
 
-        self.edit_action = QAction(QIcon.fromTheme('document-properties'), "Edit", menu)
+        self.edit_action = QAction(QIcon(":/icons/properties.svg"), "Edit", menu)
         self.edit_action.setShortcut("Ctrl+E")
         self.edit_action.setStatusTip("Edit configuration")
         self.edit_action.triggered.connect(self._edit_config)

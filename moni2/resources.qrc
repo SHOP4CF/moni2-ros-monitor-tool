@@ -1,0 +1,13 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+    <qresource prefix="icons">
+        <file alias="new.svg">../resource/icons/document-new.svg</file>
+        <file alias="open.svg">../resource/icons/document-open.svg</file>
+        <file alias="recent.svg">../resource/icons/document-open-recent.svg</file>
+        <file alias="save-as.svg">../resource/icons/document-save-as.svg</file>
+        <file alias="properties.svg">../resource/icons/document-properties.svg</file>
+        <file alias="settings.svg">../resource/icons/preferences-other.svg</file>
+        <file alias="exit.svg">../resource/icons/system-shutdown.svg</file>
+        <file alias="wastebasket.png">../resource/icons/wastebasket.png</file>
+    </qresource>
+</RCC>

@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QLabel,
 )
-from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
+from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent, QPixmap
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QTimer
 from moni2.node_info import NodeName, parse_node_name
 
@@ -64,7 +64,9 @@ class TrashLabel(QLabel):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.setMouseTracking(True)
-        self.setText("🗑")
+        pixmap = QPixmap(":/icons/wastebasket.png")
+        self.setPixmap(pixmap)
+        #self.setText("🗑")
         self.setAlignment(Qt.AlignHCenter)
         self.setStyleSheet("font: 40pt;")
 
