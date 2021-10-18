@@ -5,7 +5,7 @@ FROM osrf/ros:foxy-desktop
 SHELL ["bash", "-c"]
 
 # Install depedencies
-RUN apt-get -q2 update && apt-get install -y python3-wstool
+RUN apt-get -q2 update && apt-get install -y python3-wstool && apt-get install -y fonts-noto-color-emoji
 RUN rosdep update
 
 # How to start ROS2 code when we run a container

@@ -64,9 +64,7 @@ class TrashLabel(QLabel):
         super().__init__(parent)
         self.setAcceptDrops(True)
         self.setMouseTracking(True)
-        pixmap = QPixmap(":/icons/wastebasket.png")
-        self.setPixmap(pixmap)
-        #self.setText("🗑")
+        self.setText("🗑")
         self.setAlignment(Qt.AlignHCenter)
         self.setStyleSheet("font: 40pt;")
 
