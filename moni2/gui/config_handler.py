@@ -12,8 +12,8 @@ from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtCore import QObject, pyqtSignal, QSettings
 from moni2.gui.node_dialog import EditNodeListDialog
 from moni2.node_info import NodeName
+from moni2.resources import *  # noqa: F401, F403
 
-from moni2.resources import *
 
 class Config:
     def __init__(self, organization: str, app_name: str, app_version: str, node_names: [NodeName]):

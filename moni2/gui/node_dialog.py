@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QLabel,
 )
-from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent, QPixmap
+from PyQt5.QtGui import QDragEnterEvent, QDragMoveEvent, QDropEvent
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QTimer
 from moni2.node_info import NodeName, parse_node_name
 

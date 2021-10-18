@@ -16,8 +16,7 @@ from moni2.gui.node_model import NodeModel
 from moni2.gui.config_handler import ConfigHandler
 from moni2.gui.settings_handler import SettingsHandler
 from moni2.gui.settings_dialog import SettingsDialog
-
-from moni2.resources import *
+from moni2.resources import *  # noqa: F401, F403
 
 
 class MonitorWindow(QMainWindow):
