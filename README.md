@@ -1,6 +1,4 @@
 # Moni2
-[![pipeline status](http://robotgit.localdom.net/ai-box/applications/moni2/badges/master/pipeline.svg)](http://robotgit.localdom.net/ai-box/applications/moni2/-/commits/master)
-[![coverage report](http://robotgit.localdom.net/ai-box/applications/moni2/badges/master/coverage.svg)](http://robotgit.localdom.net/ai-box/applications/moni2/-/commits/master)
 
 a ROS2/Python3/Qt5 monitoring tool
 
@@ -23,7 +21,7 @@ a ROS2/Python3/Qt5 monitoring tool
   2. `ros2 launch moni2 moni2.launch.py`
 * **Docker**: 
   1. `docker run -it --rm -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$DISPLAY -u qtuser moni2`
-  2. `docker run -it --rm -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$DISPLAY -u qtuser robotgit.localdom.net:5000/aibox/moni2:latest`
+
 
 ## How to use
 The program will look similar to this when you run it:
