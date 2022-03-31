@@ -1,6 +1,6 @@
 # Moni2
 
-a ROS2/Python3/Qt5 monitoring tooll
+a ROS2/Python3/Qt5 monitoring tool
 
 ## Requirements
 * Python >= 3.6
