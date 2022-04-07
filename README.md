@@ -1,4 +1,4 @@
-# Moni2
+# Moni2 
 
 a ROS2/Python3/Qt5 monitoring tool
 
@@ -22,6 +22,44 @@ a ROS2/Python3/Qt5 monitoring tool
 * **Docker**: 
   1. `docker run -it --rm -v /tmp/.X11-unix:/tmp/.X11-unix -e DISPLAY=$DISPLAY -u qtuser moni2`
 
+# Windows WSL 2
+## Prerequisites
+* **Install Windows 10 WSL 2**:
+ 
+ You can install WSL 2 by following the [documentation](https://docs.microsoft.com/en-us/windows/wsl/install) for the default Linux distribution, which is Ubuntu. 
+ 
+* **Install Docker Desktop Backend**:
+
+Docker Desktop WSL 2 Backend can be installed by following this documentation. The prerequisites in the document should be followed and the WSL 2 support must be checked when asked during the installation.
+
+* **VcXsrv Windows X Server Installation and Configuration**:
+
+The Windows X Server is required to be able to connect to the display. VcXsrv can be installed [here](https://sourceforge.net/projects/vcxsrv/). The configuration steps are similar to the steps given [here](https://dev.to/darksmile92/run-gui-app-in-linux-docker-container-on-windows-host-4kde) until create dockerfile.
+  
+## Build
+* **Clone the repository**:
+*  Build the repositoy    
+  ```
+  $ cd [somepath]/moni2
+  $ docker build -t moni2:latest .
+  ```
+
+## Run
+* **WSL**:
+  1. Run VcXrsv server
+  2. `docker run -it --rm -e DISPLAY={YOUR_IP}:0.0 -u qtuser moni2`
+  3. To obtain the IP write ipconfig in CMD.
+
+## Troubleshooting
+* **Windows**:
+* If "standard_init_linux.go:190: exec user process caused "no such file or directory"" [try](https://stackoverflow.com/questions/51508150/standard-init-linux-go190-exec-user-process-caused-no-such-file-or-directory)
+* Or else use git bash, and use 
+```
+dos2unix Dockerfile 
+dos2unix entrypoint.sh
+```
+* Build again and see if it helps.
+* If other problems are encountered please contact one of the developers.
 
 ## How to use
 The program will look similar to this when you run it:
@@ -48,6 +86,8 @@ The program will look similar to this when you run it:
    * You can edit your configuration:
      * Press `File` (in the menu) and then `Edit`
      * or press `[ctrl]+[E]`
+ 6. **See hidden nodes**
+  * Press `File`, `Settings`
 
 ### Settings
 To open settings:
