@@ -30,7 +30,7 @@ a ROS2/Python3/Qt5 monitoring tool
  
 * **Install Docker Desktop Backend**:
 
-Docker Desktop WSL 2 Backend can be installed by following this documentation. The prerequisites in the document should be followed and the WSL 2 support must be checked when asked during the installation.
+Docker Desktop WSL 2 Backend can be installed by following this [documentation](https://docs.docker.com/desktop/windows/wsl/). The prerequisites in the document should be followed and the WSL 2 support must be checked when asked during the installation.
 
 * **VcXsrv Windows X Server Installation and Configuration**:
 
